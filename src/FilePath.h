@@ -3,5 +3,9 @@
     
 #include <string>
 const std::string ChunkFilePath = "data/Chunk/";
-    
+const std::string TexturePath = "data/Texture/";
+
+
+const std::string TempPath = TexturePath;
+
 #endif

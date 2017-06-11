@@ -13,7 +13,7 @@ enum BlockType{
 
 class Block{
 friend class Chunk;
-private:
+public:
     BlockType bt;
 public:
     Block(){}
