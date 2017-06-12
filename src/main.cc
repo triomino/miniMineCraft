@@ -17,8 +17,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-// FilePath
-#include "FilePath.h"
 
 // OpenGL
 #include "Shader.h"
@@ -28,72 +26,33 @@
 #include "Random.h"
 
 // Game
-#include "Player.h"
-#include "Block.h"
-#include "Chunk.h"
-
+#include "Model.h"
+#include "Control.h"
 
 // Function prototypes
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void do_movement();
+
 
 // Window dimensions
 const GLuint WIDTH = 1024, HEIGHT = 768;
 
-// Camera
-Camera  camera(glm::vec3(0.0f, 80.0f, 0.0f));
-GLfloat lastX  =  WIDTH  / 2.0;
-GLfloat lastY  =  HEIGHT / 2.0;
-bool    keys[1024];
-ChunkManager cm(4);
-Player player;
-
+//#define boooom
 // Light attributes
 glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
-
-// Deltatime
-GLfloat deltaTime = 0.0f;	// Time between current frame and last frame
-GLfloat lastFrame = 0.0f;  	// Time of last frame
-
 // The MAIN function, from here we start the application and run the game loop
 int main()
 {
-    // Init GLFW
-    glfwInit();
-    // Set all the required options for GLFW
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-
-    // Create a GLFWwindow object that we can use for GLFW's functions
-    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Minecraft", NULL, NULL);
-    glfwMakeContextCurrent(window);
-
-    // Set the required callback functions
-    glfwSetKeyCallback(window, key_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, scroll_callback);
-
-    // GLFW Options
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-    // Set this to true so GLEW knows to use a modern approach to retrieving function pointers and extensions
-    glewExperimental = GL_TRUE;
-    // Initialize GLEW to setup the OpenGL Function pointers
-    glewInit();
-
-    // Define the viewport dimensions
-    glViewport(0, 0, WIDTH, HEIGHT);
-
-    // OpenGL options
-    glEnable(GL_DEPTH_TEST);
-
-
+    #ifdef boooom
+        std::ofstream out;
+        out.open("er.txt");
+        out << "boooom" << std::endl;
+    #endif 
+    Model::KeyboardRegister(key_callback);
+    Model::MouseRegister(mouse_callback);
+    Model::ScrollRegister(scroll_callback);
+    Model::Init();
+    GLFWwindow *window = Model::getWindow();
     // Build and compile our shader program
-    Shader lightingShader("src/vs.vs", "src/fs.frag");
+    /*Shader lightingShader("src/vs.vs", "src/fs.frag");
     Shader lampShader("src/light.vs", "src/light.frag");
 
     // Set up vertex data (and buffer(s)) and attribute pointers
@@ -211,21 +170,20 @@ int main()
     // Set texture units
     lightingShader.Use();
     glUniform1i(glGetUniformLocation(lightingShader.Program, "material.diffuse"),  0);
-    glUniform1i(glGetUniformLocation(lightingShader.Program, "material.specular"), 1);
-
+    glUniform1i(glGetUniformLocation(lightingShader.Program, "material.specular"), 1);*/
+    
     #ifdef boooom
-        std::ofstream out;
-        out.open("er.txt");
+        
     #endif
     // Game loop
     while (!glfwWindowShouldClose(window))
     {
         // Calculate deltatime of current frame
         GLfloat currentFrame = glfwGetTime();
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
+        Model::deltaTime = currentFrame - Model::lastFrame;
+        Model::lastFrame = currentFrame;
         
-        cm.CheckPos(camera.Position);
+        Model::CheckPos();
         #ifdef nodef
             std::ofstream out;
             out.open("er.txt", std::ios::app);
@@ -239,14 +197,15 @@ int main()
         // Clear the colorbuffer
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+        Model::Display();
 
         // Use cooresponding shader when setting uniforms/drawing objects
+        /*const Camera &camera = Model::getCamera();
         lightingShader.Use();
         GLint viewPosLoc = glGetUniformLocation(lightingShader.Program, "viewPos");
         glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z);
         // Set material properties
-        glUniform1f(glGetUniformLocation(lightingShader.Program, "material.shininess"), 32.0f);
+        glUniform1f(glGetUniformLocation(lightingShader.Program, "material.shininess"), 32.0f);*/
         // == ==========================
         // Here we set all the uniforms for the 5/6 types of lights we have. We have to set them manually and index 
         // the proper PointLight struct in the array to set each uniform variable. This can be done more code-friendly
@@ -254,7 +213,7 @@ int main()
         // by using 'Uniform buffer objects', but that is something we discuss in the 'Advanced GLSL' tutorial.
         // == ==========================
         // Directional light
-        glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.direction"), -0.2f, -1.0f, -0.3f);
+        /*glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.direction"), -0.2f, -1.0f, -0.3f);
         //glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.ambient"), 0.05f, 0.05f, 0.05f);
         glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.ambient"), 0.7f, 0.7f, 0.7f);
         glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.diffuse"), 0.4f, 0.4f, 0.4f);
@@ -292,7 +251,7 @@ int main()
         glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[3].linear"), 0.09);
         glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[3].quadratic"), 0.032);
         // SpotLight
-        /*glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.position"), camera.Position.x, camera.Position.y, camera.Position.z);
+        glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.position"), camera.Position.x, camera.Position.y, camera.Position.z);
         glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.direction"), camera.Front.x, camera.Front.y, camera.Front.z);
         glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.ambient"), 0.0f, 0.0f, 0.0f);
         glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.diffuse"), 1.0f, 1.0f, 1.0f);
@@ -304,7 +263,7 @@ int main()
         glUniform1f(glGetUniformLocation(lightingShader.Program, "spotLight.outerCutOff"), glm::cos(glm::radians(15.0f)));*/
 
         // Create camera transformations
-        glm::mat4 view;
+        /*glm::mat4 view;
         view = camera.GetViewMatrix();
         glm::mat4 projection = glm::perspective(camera.Zoom, (GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
         // Get the uniform locations
@@ -320,37 +279,39 @@ int main()
         glBindTexture(GL_TEXTURE_2D, diffuseMap);
         // Bind specular map
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, specularMap);
+        glBindTexture(GL_TEXTURE_2D, specularMap);*/
 
         // Draw 10 containers with the same VAO and VBO information; only their world space coordinates differ
-        glm::mat4 model;
-        glBindVertexArray(containerVAO);
-        glm::vec3 cubePosition;
-        glm::vec3 chunkPos;
-        GLint xl = Chunk::xLength;
-        GLint yl = Chunk::yLength;
-        GLint zl = Chunk::zLength;
+        // glm::mat4 model;
+        // glBindVertexArray(containerVAO);
+        // glm::vec3 cubePosition;
+        // glm::vec3 chunkPos;
+        // GLint xl = Chunk::xLength;
+        // GLint yl = Chunk::yLength;
+        // GLint zl = Chunk::zLength;
+        //Model::Display();
         #ifdef nodef
             
             out << "111" << std::endl;
         #endif
-        for (GLuint i = 0; i < ChunkManager::num; i++)
-        if (cm.loaded[i]){
-            //lightingShader.Use();
-            std::set<int> &p = cm.chunk[i].onDraw;
-            for (std::set<int>::iterator it = p.begin(); it != p.end(); it++){
-                cubePosition = glm::vec3(*it / (yl * zl),
-                                    *it & yl - 1,
-                                    *it / yl & zl - 1);
-                chunkPos = glm::vec3(xl * cm.chunk[i].Position.x, 
-                                    0, 
-                                    zl * cm.chunk[i].Position.y);
-                model = glm::mat4();
-                model = glm::translate(model, chunkPos + cubePosition);
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        
+        // for (GLuint i = 0; i < ChunkManager::num; i++)
+        // if (cm.loaded[i]){
+            // //lightingShader.Use();
+            // std::set<int> &p = cm.chunk[i].onDraw;
+            // for (std::set<int>::iterator it = p.begin(); it != p.end(); it++){
+                // cubePosition = glm::vec3(*it / (yl * zl),
+                                    // *it & yl - 1,
+                                    // *it / yl & zl - 1);
+                // chunkPos = glm::vec3(xl * cm.chunk[i].Position.x, 
+                                    // 0, 
+                                    // zl * cm.chunk[i].Position.y);
+                // model = glm::mat4();
+                // model = glm::translate(model, chunkPos + cubePosition);
+                // glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
                 
-                glDrawArrays(GL_TRIANGLES, 0, 36);
-            }
+                // glDrawArrays(GL_TRIANGLES, 0, 36);
+            // }
             /*lampShader.Use();
             for (int it = 0; it < Chunk::blockNum; it++)
             if (cm.chunk[i].block[it].bt == Empty){
@@ -366,11 +327,11 @@ int main()
                 
                 glDrawArrays(GL_TRIANGLES, 0, 36);
             }*/
-        }
+        //}
         #ifdef nodef
             out << "2222" << std::endl;
         #endif
-        glBindVertexArray(0);
+        /*glBindVertexArray(0);
 
         // Also draw the lamp object, again binding the appropriate shader
         lampShader.Use();
@@ -380,10 +341,10 @@ int main()
         projLoc  = glGetUniformLocation(lampShader.Program, "projection");
         // Set matrices
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));*/
         
         // We now draw as many light bulbs as we have point lights.
-        glBindVertexArray(lightVAO);
+        /*glBindVertexArray(lightVAO);
         for (GLuint i = 0; i < 4; i++)
         {
             model = glm::mat4();
@@ -393,7 +354,7 @@ int main()
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
         glBindVertexArray(0);
-
+        */
 
         // Swap the screen buffers
         glfwSwapBuffers(window);
@@ -419,53 +380,3 @@ int main()
     return 0;
 }
 
-// Is called whenever a key is pressed/released via GLFW
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
-{
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, GL_TRUE);
-    if (key >= 0 && key < 1024)
-    {
-        if (action == GLFW_PRESS)
-            keys[key] = true;
-        else if (action == GLFW_RELEASE)
-            keys[key] = false;
-    }
-}
-
-void do_movement()
-{
-    // Camera controls
-    if (keys[GLFW_KEY_W])
-        camera.ProcessKeyboard(FORWARD, deltaTime);
-    if (keys[GLFW_KEY_S])
-        camera.ProcessKeyboard(BACKWARD, deltaTime);
-    if (keys[GLFW_KEY_A])
-        camera.ProcessKeyboard(LEFT, deltaTime);
-    if (keys[GLFW_KEY_D])
-        camera.ProcessKeyboard(RIGHT, deltaTime);
-}
-
-bool firstMouse = true;
-void mouse_callback(GLFWwindow* window, double xpos, double ypos)
-{
-    if (firstMouse)
-    {
-        lastX = xpos;
-        lastY = ypos;
-        firstMouse = false;
-    }
-
-    GLfloat xoffset = xpos - lastX;
-    GLfloat yoffset = lastY - ypos;  // Reversed since y-coordinates go from bottom to left
-
-    lastX = xpos;
-    lastY = ypos;
-
-    camera.ProcessMouseMovement(xoffset, yoffset);
-}
-
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
-    camera.ProcessMouseScroll(yoffset);
-}

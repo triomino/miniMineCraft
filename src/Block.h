@@ -3,6 +3,7 @@
 
 #include <glm/glm.hpp>
 
+
 enum BlockType{
     Empty,
     Grass,
@@ -13,12 +14,15 @@ enum BlockType{
 
 class Block{
 friend class Chunk;
-public:
+private:
     BlockType bt;
 public:
-    Block(){}
-    ~Block(){}
-    void Display(){}
+    Block(){
+        bt = Empty;
+    }
+    ~Block(){
+        
+    }
 };
 
 #endif
