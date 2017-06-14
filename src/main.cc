@@ -29,8 +29,7 @@
 #include "Model.h"
 #include "Control.h"
 
-// Function prototypes
-
+//#define boooom
 
 // Window dimensions
 const GLuint WIDTH = 1024, HEIGHT = 768;
@@ -49,6 +48,7 @@ int main()
     Model::KeyboardRegister(key_callback);
     Model::MouseRegister(mouse_callback);
     Model::ScrollRegister(scroll_callback);
+    Model::MouseButtonRegister(mouse_button_callback);
     Model::Init();
     GLFWwindow *window = Model::getWindow();
     // Build and compile our shader program
@@ -171,10 +171,6 @@ int main()
     lightingShader.Use();
     glUniform1i(glGetUniformLocation(lightingShader.Program, "material.diffuse"),  0);
     glUniform1i(glGetUniformLocation(lightingShader.Program, "material.specular"), 1);*/
-    
-    #ifdef boooom
-        
-    #endif
     // Game loop
     while (!glfwWindowShouldClose(window))
     {
@@ -184,10 +180,11 @@ int main()
         Model::lastFrame = currentFrame;
         
         Model::CheckPos();
-        #ifdef nodef
-            std::ofstream out;
-            out.open("er.txt", std::ios::app);
-            out << "333" << std::endl;
+        Model::CheckChoosingCube();
+        Model::SunMove();
+        #ifdef boooom
+            glm::vec3 p = Model::ChoosingCube;
+            if (Model::hasChoosingCube) out << p.x << " " << p.y << " " << p.z << std::endl;
         #endif
 
         // Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
@@ -377,6 +374,9 @@ int main()
     
     // Terminate GLFW, clearing any resources allocated by GLFW.
     glfwTerminate();
+    #ifdef boooom
+        out.close();
+    #endif 
     return 0;
 }
 

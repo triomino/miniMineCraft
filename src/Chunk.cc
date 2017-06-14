@@ -2,6 +2,7 @@
 #define __CHUNK_CC__
 
 #include "Model.h"
+
 //#define boooom
 #ifdef boooom
 #include <iostream>
@@ -96,10 +97,28 @@ void Chunk::CheckAdEmpty(){
 }
 
 void Chunk::Display(){
+    #ifdef boooom
+        std::ofstream out;
+        out.open("er.txt", std::ios::app);
+    #endif
+    
     GLint modelLoc = glGetUniformLocation(ChunkManager::shader.Program, "model");
     glm::vec3 WorldPos = glm::vec3(Position.x * xLength, 0.0f, Position.y * zLength);
     glm::vec3 LocPos;
+    
+    GLint ChooseLoc = glGetUniformLocation(ChunkManager::shader.Program, "Choosed");
     for (std::set<int>::iterator it = onDraw.begin(); it != onDraw.end(); it++){
+        
+        if (Model::hasChoosingCube && Position.x == Model::ChoosingChunk.first && Position.y == Model::ChoosingChunk.second && Model::ChoosingCube == *it){
+            #ifdef boooom
+                out << x << " " << z << std::endl;
+                out << "NNNNNNNNNNNNNNNNNNNNNNNNNNNN" << std::endl;
+            #endif
+            glUniform1i(ChooseLoc, true);
+        }
+        else {
+            glUniform1i(ChooseLoc, false);
+        }
         LocPos = glm::vec3(*it / (yLength * zLength),
                             *it & yLength - 1,
                             *it / yLength & zLength - 1);
@@ -111,6 +130,10 @@ void Chunk::Display(){
     }
     #ifdef Fuck
         std::cout << onDraw.size() << std::endl;
+    #endif
+    
+    #ifdef boooom
+        out.close();
     #endif
 }
 
@@ -334,7 +357,8 @@ void ChunkManager::Load(){
     #endif
 }
 
-void ChunkManager::CheckPos(glm::vec3 PlayerPos){
+void ChunkManager::CheckPos(){
+    glm::vec3 PlayerPos = Model::getCamera().Position;
     // Time in Event System
     EventTimeHead++;
     if (EventTimeTail < EventTimeHead) EventTimeTail = EventTimeHead;
@@ -344,10 +368,12 @@ void ChunkManager::CheckPos(glm::vec3 PlayerPos){
     static int firstCheck = 1;
     static int tot = 0;
     static std::PII disp[num];
-    int x = PlayerPos.x / Chunk::xLength;
-    if (PlayerPos.x < 0) x--;
-    int y = PlayerPos.z / Chunk::zLength;
-    if (PlayerPos.z < 0) y--;
+    int rx = round(PlayerPos.x);
+    int rz = round(PlayerPos.z);
+    int xflag = rx < 0;
+    int zflag = rz < 0;
+    int x = (rx + xflag) / Chunk::xLength - xflag;
+    int y = (rz + zflag) / Chunk::zLength - zflag;
     if (firstCheck){
         for (int i = -r; i <= r; i++){
             for (int j = -r; j <= r; j++){
@@ -448,70 +474,13 @@ void ChunkManager::CheckPos(glm::vec3 PlayerPos){
 void ChunkManager::Display(){
     shader.Use();
     const Camera &camera = Model::getCamera();
-        // Positions of the point lights
-        glm::vec3 pointLightPositions[] = {
-            glm::vec3( 0.7f,  0.2f,  2.0f),
-            glm::vec3( 2.3f, -3.3f, -4.0f),
-            glm::vec3(-4.0f,  2.0f, -12.0f),
-            glm::vec3( 0.0f,  0.0f, -3.0f)
-        };
         
-        // diliver viewPos
         GLint viewPosLoc = glGetUniformLocation(shader.Program, "viewPos");
         glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z);
         // Set material properties
         glUniform1f(glGetUniformLocation(shader.Program, "material.shininess"), 32.0f);
     
-        // Directional light
-        glUniform3f(glGetUniformLocation(shader.Program, "dirLight.direction"), -0.2f, -1.0f, -0.3f);
-        //glUniform3f(glGetUniformLocation(shader.Program, "dirLight.ambient"), 0.05f, 0.05f, 0.05f);
-        glUniform3f(glGetUniformLocation(shader.Program, "dirLight.ambient"), 1.0f, 0.0f, 0.0f);
-        glUniform3f(glGetUniformLocation(shader.Program, "dirLight.diffuse"), 0.0f, 1.0f, 0.0f);
-        glUniform3f(glGetUniformLocation(shader.Program, "dirLight.specular"), 0.0f, 0.0f, 1.0f);
-        // Point light 1
-        glUniform3f(glGetUniformLocation(shader.Program, "pointLights[0].position"), pointLightPositions[0].x, pointLightPositions[0].y, pointLightPositions[0].z);
-        glUniform3f(glGetUniformLocation(shader.Program, "pointLights[0].ambient"), 0.05f, 0.05f, 0.05f);
-        glUniform3f(glGetUniformLocation(shader.Program, "pointLights[0].diffuse"), 0.8f, 0.8f, 0.8f);
-        glUniform3f(glGetUniformLocation(shader.Program, "pointLights[0].specular"), 1.0f, 1.0f, 1.0f);
-        glUniform1f(glGetUniformLocation(shader.Program, "pointLights[0].constant"), 1.0f);
-        glUniform1f(glGetUniformLocation(shader.Program, "pointLights[0].linear"), 0.09);
-        glUniform1f(glGetUniformLocation(shader.Program, "pointLights[0].quadratic"), 0.032);
-        // Point light 2
-        glUniform3f(glGetUniformLocation(shader.Program, "pointLights[1].position"), pointLightPositions[1].x, pointLightPositions[1].y, pointLightPositions[1].z);
-        glUniform3f(glGetUniformLocation(shader.Program, "pointLights[1].ambient"), 0.05f, 0.05f, 0.05f);
-        glUniform3f(glGetUniformLocation(shader.Program, "pointLights[1].diffuse"), 0.8f, 0.8f, 0.8f);
-        glUniform3f(glGetUniformLocation(shader.Program, "pointLights[1].specular"), 1.0f, 1.0f, 1.0f);
-        glUniform1f(glGetUniformLocation(shader.Program, "pointLights[1].constant"), 1.0f);
-        glUniform1f(glGetUniformLocation(shader.Program, "pointLights[1].linear"), 0.09);
-        glUniform1f(glGetUniformLocation(shader.Program, "pointLights[1].quadratic"), 0.032);
-        // Point light 3
-        glUniform3f(glGetUniformLocation(shader.Program, "pointLights[2].position"), pointLightPositions[2].x, pointLightPositions[2].y, pointLightPositions[2].z);
-        glUniform3f(glGetUniformLocation(shader.Program, "pointLights[2].ambient"), 0.05f, 0.05f, 0.05f);
-        glUniform3f(glGetUniformLocation(shader.Program, "pointLights[2].diffuse"), 0.8f, 0.8f, 0.8f);
-        glUniform3f(glGetUniformLocation(shader.Program, "pointLights[2].specular"), 1.0f, 1.0f, 1.0f);
-        glUniform1f(glGetUniformLocation(shader.Program, "pointLights[2].constant"), 1.0f);
-        glUniform1f(glGetUniformLocation(shader.Program, "pointLights[2].linear"), 0.09);
-        glUniform1f(glGetUniformLocation(shader.Program, "pointLights[2].quadratic"), 0.032);
-        // Point light 4
-        glUniform3f(glGetUniformLocation(shader.Program, "pointLights[3].position"), pointLightPositions[3].x, pointLightPositions[3].y, pointLightPositions[3].z);
-        glUniform3f(glGetUniformLocation(shader.Program, "pointLights[3].ambient"), 0.05f, 0.05f, 0.05f);
-        glUniform3f(glGetUniformLocation(shader.Program, "pointLights[3].diffuse"), 0.8f, 0.8f, 0.8f);
-        glUniform3f(glGetUniformLocation(shader.Program, "pointLights[3].specular"), 1.0f, 1.0f, 1.0f);
-        glUniform1f(glGetUniformLocation(shader.Program, "pointLights[3].constant"), 1.0f);
-        glUniform1f(glGetUniformLocation(shader.Program, "pointLights[3].linear"), 0.09);
-        glUniform1f(glGetUniformLocation(shader.Program, "pointLights[3].quadratic"), 0.032);
-        // SpotLight
-        glUniform3f(glGetUniformLocation(shader.Program, "spotLight.position"), camera.Position.x, camera.Position.y, camera.Position.z);
-        glUniform3f(glGetUniformLocation(shader.Program, "spotLight.direction"), camera.Front.x, camera.Front.y, camera.Front.z);
-        glUniform3f(glGetUniformLocation(shader.Program, "spotLight.ambient"), 0.0f, 0.0f, 0.0f);
-        glUniform3f(glGetUniformLocation(shader.Program, "spotLight.diffuse"), 1.0f, 1.0f, 1.0f);
-        glUniform3f(glGetUniformLocation(shader.Program, "spotLight.specular"), 1.0f, 1.0f, 1.0f);
-        glUniform1f(glGetUniformLocation(shader.Program, "spotLight.constant"), 1.0f);
-        glUniform1f(glGetUniformLocation(shader.Program, "spotLight.linear"), 0.09);
-        glUniform1f(glGetUniformLocation(shader.Program, "spotLight.quadratic"), 0.032);
-        glUniform1f(glGetUniformLocation(shader.Program, "spotLight.cutOff"), glm::cos(glm::radians(12.5f)));
-        glUniform1f(glGetUniformLocation(shader.Program, "spotLight.outerCutOff"), glm::cos(glm::radians(15.0f)));
-
+    Light::Apply(shader.Program);
     
     
     // Create camera transformations
@@ -619,6 +588,55 @@ void ChunkManager::PushEvent(int time, int chunkId, ChunkEvent type, int x, int 
     out <<"push " << time << " " << chunkId << " " << int(type) << std::endl;
     out.close();
     #endif
+}
+
+BlockType ChunkManager::getBlockType(std::PII cn, unsigned int bn){
+    if (ChunkPosMap.find(cn) != ChunkPosMap.end() && bn < Chunk::blockNum){
+        return chunk[ChunkPosMap[cn]].block[bn].bt;
+    }
+    return Empty;
+}
+
+void ChunkManager::RemoveCube(std::PII cPos, unsigned int bn){
+    int k;
+    const int dx[] = {0, 0, 0, 0, -1, 1};
+    const int dz[] = {0, 0, -1, 1, 0, 0};
+    const int dy[] = {-1, 1, 0, 0, 0, 0};
+    const int xl = Chunk::xLength;
+    const int yl = Chunk::yLength;
+    const int zl = Chunk::zLength;
+    const int is = zl * yl;
+    const int js = yl;
+    if (ChunkPosMap.find(cPos) != ChunkPosMap.end()){
+        chunk[k = ChunkPosMap[cPos]].block[bn].bt = Empty;
+        chunk[k].onDraw.erase(bn);
+        int x = bn / is;
+        int z = bn / js & zl - 1;
+        int y = bn & yl - 1;
+        for (int d = 0; d < 6; d++)
+        if (y + dy[d] >= 0 && y + dy[d] < yl){
+            int p = 0;
+            Chunk *c = NULL;
+            if (x + dx[d] >= 0 && x + dx[d] < xl && z + dz[d] >= 0 && z + dz[d] < zl){
+                p = bn + dx[d] * is + dz[d] * js + dy[d], c = chunk + k;
+            }
+            else if (x + dx[d] < 0){
+                p = bn + is * (xl - 1), c = chunk[k].AdjChunk[2];
+            }
+            else if (x + dx[d] >= xl){
+                p = bn - is * (xl - 1), c = chunk[k].AdjChunk[3];
+            }
+            else if (z + dz[d] < 0){
+                p = bn + js * (zl - 1), c = chunk[k].AdjChunk[0];
+            }
+            else if (z + dz[d] >= zl){
+                p = bn - js * (zl - 1), c = chunk[k].AdjChunk[1];
+            }
+            if (c && c->block[p].bt != Empty && c->onDraw.find(p) == c->onDraw.end()){
+                c->onDraw.insert(p);
+            }
+        }
+    }
 }
 
 // End class ChunkManager

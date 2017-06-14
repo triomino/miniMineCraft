@@ -26,6 +26,12 @@ const GLfloat SPEED      =  10.0f;
 const GLfloat SENSITIVTY =  0.25f;
 const GLfloat ZOOM       =  45.0f;
 
+// Camera Mode
+enum CameraMode{
+    Gravity,
+    Roaming,
+    CameraModeNum
+};
 
 // An abstract camera class that processes input and calculates the corresponding Eular Angles, Vectors and Matrices for use in OpenGL
 class Camera
@@ -44,7 +50,7 @@ public:
     GLfloat MovementSpeed;
     GLfloat MouseSensitivity;
     GLfloat Zoom;
-    GLint Gravity;
+    CameraMode camera_mode;
     // view Width and Heigth
     static const GLuint WIDTH = 1024, HEIGHT = 768;
 
@@ -56,7 +62,7 @@ public:
         this->Yaw = yaw;
         this->Pitch = pitch;
         this->updateCameraVectors();
-        this->Gravity = 0;
+        this->camera_mode = Roaming;
     }
     // Constructor with scalar values
     Camera(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat upX, GLfloat upY, GLfloat upZ, GLfloat yaw, GLfloat pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVTY), Zoom(ZOOM)
@@ -78,10 +84,11 @@ public:
     void ProcessKeyboard(Camera_Movement direction, GLfloat deltaTime)
     {
         GLfloat velocity = this->MovementSpeed * deltaTime;
+        glm::vec3 tFront = camera_mode == Gravity ? glm::normalize(glm::cross(this->WorldUp, this->Right)) : this->Front;
         if (direction == FORWARD)
-            this->Position += this->Front * velocity;
+            this->Position += tFront * velocity;
         if (direction == BACKWARD)
-            this->Position -= this->Front * velocity;
+            this->Position -= tFront * velocity;
         if (direction == LEFT)
             this->Position -= this->Right * velocity;
         if (direction == RIGHT)
@@ -108,6 +115,7 @@ public:
 
         // Update Front, Right and Up Vectors using the updated Eular angles
         this->updateCameraVectors();
+        
     }
 
     // Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
@@ -121,6 +129,9 @@ public:
             this->Zoom = a;
         if (this->Zoom >= b)
             this->Zoom = b;
+    }
+    void setCameraMode(CameraMode cm){
+        camera_mode = cm;
     }
 
 private:
@@ -137,6 +148,7 @@ private:
         this->Right = glm::normalize(glm::cross(this->Front, this->WorldUp));  // Normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
         this->Up    = glm::normalize(glm::cross(this->Right, this->Front));
     }
+    
 };
 
 #endif

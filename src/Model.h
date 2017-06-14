@@ -19,11 +19,15 @@
 // Random
 #include "Random.h"
 
-// Game Objects
-#include "Chunk.h"
-#include "Player.h"
-#include "Camera.h"
+// Tools
 #include "Shader.h"
+
+// Game Objects
+#include "Camera.h"
+#include "Player.h"
+#include "Block.h"
+#include "Chunk.h"
+#include "Light.h"
 
 class Model{
 private:
@@ -34,25 +38,50 @@ private:
     static bool keyPressed[1024];
     // window
     static GLFWwindow* window;
-    // callback functions
+    
+    // listeners
     static void (*key_callback)(GLFWwindow* window, int key, int scancode, int action, int mode);
     static void (*mouse_callback)(GLFWwindow* window, double xpos, double ypos);
     static void (*scroll_callback)(GLFWwindow* window, double xoffset, double yoffset);
+    static void (*mouse_button_callback)(GLFWwindow* window, int button, int action, int mods);
     
 public:
-    static void Init();
-    static void CheckPos();
-    static void Display();
-    static Camera &getCamera();
     static GLfloat deltaTime;	// Time between current frame and last frame
     static GLfloat lastFrame;  	// Time of last frame
+    
+    // current Choosing Cube
+    static bool hasChoosingCube;
+    static std::PII ChoosingChunk;
+    static int ChoosingCube;
+    
+    const static int ChunkRange = 4;
+    
+    // Check before drawing
+    static void CheckPos();
+    static void CheckChoosingCube();
+    
+    // Sun Move
+    static void SunMove();
+
+    // init
+    static void Init();
+    
+    // Entrance of drawing
+    static void Display();
+
+    
+    static Camera &getCamera();
     
     // keyboard
     static void setKeyPressed(int key, bool value);
     const static bool *getKeyPressed();
     
+    // mouse
+    static void left_button_pressed();
+    static void right_button_pressed();
+    
     // window
-    static GLFWwindow* getWindow();
+    static GLFWwindow* getWindow(); 
     
     // register
     static void KeyboardRegister(void (*k)(GLFWwindow* window, int key, int scancode, int action, int mode)){
@@ -63,6 +92,9 @@ public:
     }
     static void ScrollRegister(void (*s)(GLFWwindow* window, double xoffset, double yoffset)){
         scroll_callback = s;
+    }
+    static void MouseButtonRegister(void (*mb)(GLFWwindow* window, int button, int action, int mods)){
+        mouse_button_callback = mb;
     }
 };
 

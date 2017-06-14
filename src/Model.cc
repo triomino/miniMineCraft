@@ -8,18 +8,35 @@
 // GLFW
 #include <GLFW/glfw3.h>
 
+#include <cmath>
+
 #include "Model.h"
 
-ChunkManager Model::cm = ChunkManager(4);
+// Game Objects
+ChunkManager Model::cm = ChunkManager(Model::ChunkRange);
 Player Model::player;
 Camera Model::camera;
+
+// keyboard 
 bool Model::keyPressed[1024] = {false};
+// time system
 GLfloat Model::deltaTime = 0.0f;
 GLfloat Model::lastFrame = 0.0f;
+
+// window
 GLFWwindow *Model::window = NULL;
+
+// ChoosingCube
+bool Model::hasChoosingCube;
+std::PII Model::ChoosingChunk;
+int Model::ChoosingCube;
+
+// listeners
 void (*Model::key_callback)(GLFWwindow* window, int key, int scancode, int action, int mode) = NULL;
 void (*Model::mouse_callback)(GLFWwindow* window, double xpos, double ypos) = NULL;
 void (*Model::scroll_callback)(GLFWwindow* window, double xoffset, double yoffset) = NULL;
+void (*Model::mouse_button_callback)(GLFWwindow* window, int button, int action, int mods) = NULL;
+
 
 void Model::Init(){
     Random::Init();
@@ -42,6 +59,7 @@ void Model::Init(){
     glfwSetKeyCallback(window, key_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback); 
 
     // GLFW Options
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -57,12 +75,13 @@ void Model::Init(){
     // OpenGL options
     glEnable(GL_DEPTH_TEST);
     cm.Load();
+    Light::Load();
     player = Player();
-    camera = Camera(glm::vec3(0.0f, 80.0f, 0.0f));
+    camera = Camera(glm::vec3(0.0f, 65.0f, 0.0f));
 }
 
 void Model::CheckPos(){
-    cm.CheckPos(camera.Position);
+    cm.CheckPos();
 }
 
 void Model::Display(){
@@ -70,6 +89,7 @@ void Model::Display(){
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     cm.Display();
+    Light::Display();
 }
 
 Camera &Model::getCamera(){
@@ -86,6 +106,43 @@ const bool *Model::getKeyPressed(){
 
 GLFWwindow* Model::getWindow(){
     return window;
+}
+
+void Model::left_button_pressed(){
+    if (hasChoosingCube) cm.RemoveCube(ChoosingChunk, ChoosingCube);
+}
+
+void Model::right_button_pressed(){
+    
+}
+
+void Model::CheckChoosingCube(){
+    hasChoosingCube = false;
+    glm::vec3 step = glm::normalize(camera.Front) / 10.0f;
+    glm::vec3 testPoint = camera.Position + step;
+    int xl = Chunk::xLength;
+    int yl = Chunk::yLength;
+    int zl = Chunk::zLength;
+    unsigned int bn;
+    for (int i = 0, x, z, cx, cz, dx, dz; i < 50; i++, testPoint += step){
+        x = round(testPoint.x);
+        z = round(testPoint.z);
+        cx = (x + (x < 0)) / xl - (x < 0);
+        cz = (z + (z < 0)) / zl - (z < 0);
+        dx = x - cx * xl;
+        dz = z - cz * zl;
+        bn = dx * zl * yl + dz * yl + round(testPoint.y);
+        if (cm.getBlockType(std::make_pair(cx, cz), bn) != Empty){
+            hasChoosingCube = true;
+            ChoosingChunk = std::make_pair(cx, cz);
+            ChoosingCube = bn;
+            break;
+        }
+    }
+}
+
+void Model::SunMove(){
+    Light::SunMove();
 }
 
 #endif

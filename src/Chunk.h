@@ -11,9 +11,7 @@
 #include <glm/glm.hpp>
 #include "FilePath.h"
 #include "Random.h"
-#include "Block.h"
-#include "Player.h"
-#include "Shader.h"
+#include "Model.h"
 
 #define PII pair<int, int>
 #define Square(a) ((a) * (a))
@@ -72,6 +70,7 @@ enum ChunkEvent{
 
 class ChunkManager{
     friend class Chunk;
+    friend class Light;
 private:
     std::map<std::PII, int> ChunkPosMap;
     static const int num = 500;
@@ -95,8 +94,12 @@ public:
     ~ChunkManager();
     
     void Load();
-    void CheckPos(glm::vec3 PlayerPos);
+    void CheckPos();
     void Display();
+    // Data access
+    BlockType getBlockType(std::PII cn, unsigned int bn);
+    void RemoveCube(std::PII cPos, unsigned int bn);
+    // Event System
     void RunEvent();
     void PushEvent(int time, int chunkId, ChunkEvent type, int x = 0, int y = 0);
 };

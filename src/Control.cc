@@ -62,4 +62,23 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     camera.ProcessMouseScroll(yoffset);
 }
 
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)  
+{  
+    if (action == GLFW_PRESS) switch(button)  
+            {  
+            case GLFW_MOUSE_BUTTON_LEFT:  
+                Model::left_button_pressed();
+                break;  
+            case GLFW_MOUSE_BUTTON_MIDDLE:  
+                
+                break;  
+            case GLFW_MOUSE_BUTTON_RIGHT:  
+                Model::right_button_pressed();
+                break;  
+            default:  
+                return;  
+            }  
+    return;  
+}  
+
 #endif

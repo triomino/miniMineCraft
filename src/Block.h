@@ -14,6 +14,7 @@ enum BlockType{
 
 class Block{
 friend class Chunk;
+friend class ChunkManager;
 private:
     BlockType bt;
 public:
