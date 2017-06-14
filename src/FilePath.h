@@ -17,6 +17,9 @@ const std::string LightSunPath = LightPath + "sun.txt";
 //Model Path
 const std::string ModelBallPath = ModelPath + "ball.obj";
 
+//Texture
+const std::string BlockTexture = TexturePath + "blocks/";
+
 const std::string TempPath = TexturePath;
 
 #endif

@@ -13,7 +13,7 @@
 #include "Model.h"
 
 // Game Objects
-ChunkManager Model::cm = ChunkManager(Model::ChunkRange);
+ChunkManager Model::cm;
 Player Model::player;
 Camera Model::camera;
 
@@ -74,9 +74,11 @@ void Model::Init(){
 
     // OpenGL options
     glEnable(GL_DEPTH_TEST);
+    Materia::Load();
     cm.Load();
     Light::Load();
-    player = Player();
+    
+    player.Load();
     camera = Camera(glm::vec3(0.0f, 65.0f, 0.0f));
 }
 
@@ -85,11 +87,12 @@ void Model::CheckPos(){
 }
 
 void Model::Display(){
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClearColor(0.0f, 127.0f / 255.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     cm.Display();
     Light::Display();
+    player.Display();
 }
 
 Camera &Model::getCamera(){

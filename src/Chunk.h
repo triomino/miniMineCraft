@@ -86,11 +86,9 @@ private:
     static Shader shader;
     static GLfloat vertices[];
     static GLuint VBO, containerVAO;
-    // texture map
-    GLuint diffuseMap, specularMap, emissionMap;
     
 public:
-    ChunkManager(int radius = 5);
+    ChunkManager();
     ~ChunkManager();
     
     void Load();
@@ -98,6 +96,7 @@ public:
     void Display();
     // Data access
     BlockType getBlockType(std::PII cn, unsigned int bn);
+    BlockType getBlockType(glm::vec3 worldPos);
     void RemoveCube(std::PII cPos, unsigned int bn);
     // Event System
     void RunEvent();

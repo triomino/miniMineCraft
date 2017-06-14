@@ -36,7 +36,7 @@ void LoadOBJ(std::string filename,
 		else if (str == "vt") {
 			GLfloat x, y;
 			str_in >> x >> y;
-			vt.push_back(glm::vec2(x, y));
+			vt.push_back(glm::vec2(x, 1.0 - y));
 		}
 		else if (str == "vn") {
 			GLfloat x, y, z;
@@ -99,7 +99,7 @@ void LoadOBJ(const std::string filename, GLuint &VAO, GLuint &size){
 		else if (str == "vt") {
 			GLfloat x, y;
 			str_in >> x >> y;
-			v[2].push_back(glm::vec3(x, y, 0.0f));
+			v[2].push_back(glm::vec3(x, 1.0 - y, 0.0f));
 		}
 		else if (str == "vn") {
 			GLfloat x, y, z;

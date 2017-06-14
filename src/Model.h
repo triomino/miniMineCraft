@@ -28,6 +28,7 @@
 #include "Block.h"
 #include "Chunk.h"
 #include "Light.h"
+#include "Materia.h"
 
 class Model{
 private:

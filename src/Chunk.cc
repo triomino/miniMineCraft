@@ -3,7 +3,7 @@
 
 #include "Model.h"
 
-//#define boooom
+#define boooom
 #ifdef boooom
 #include <iostream>
 #include <fstream>
@@ -22,7 +22,7 @@ void Chunk::randomProduce(){
     for (int i = 0; i < xLength; i++){
         for (int j = 0, l; j < zLength; j++){
             for (l = 0; l < k; l++){
-                (pb++)->bt = Soil;
+                (pb++)->bt = Dirt;
             }
             (pb++)->bt = Grass;
             for (l = k + 1; l < yLength; l++){
@@ -34,8 +34,13 @@ void Chunk::randomProduce(){
             if (temp > 8) k++;
             if (k < yHalf - 3) k = yHalf - 3;
             if (k > yHalf + 3) k = yHalf + 3;
+            
         }
     }
+    // Cloud Produce
+    /*if (Random::GetInt(10) == 0){
+        for 
+    }*/
 }
 
 
@@ -101,19 +106,17 @@ void Chunk::Display(){
         std::ofstream out;
         out.open("er.txt", std::ios::app);
     #endif
-    
-    GLint modelLoc = glGetUniformLocation(ChunkManager::shader.Program, "model");
+    GLint Program = ChunkManager::shader.Program;
+    GLint modelLoc = glGetUniformLocation(Program, "model");
     glm::vec3 WorldPos = glm::vec3(Position.x * xLength, 0.0f, Position.y * zLength);
     glm::vec3 LocPos;
     
-    GLint ChooseLoc = glGetUniformLocation(ChunkManager::shader.Program, "Choosed");
+    GLint ChooseLoc = glGetUniformLocation(Program, "Choosed");
+    
+    int faceFlag[] = {1, 1, 1, 1, 2, 0};
     for (std::set<int>::iterator it = onDraw.begin(); it != onDraw.end(); it++){
         
         if (Model::hasChoosingCube && Position.x == Model::ChoosingChunk.first && Position.y == Model::ChoosingChunk.second && Model::ChoosingCube == *it){
-            #ifdef boooom
-                out << x << " " << z << std::endl;
-                out << "NNNNNNNNNNNNNNNNNNNNNNNNNNNN" << std::endl;
-            #endif
             glUniform1i(ChooseLoc, true);
         }
         else {
@@ -125,8 +128,12 @@ void Chunk::Display(){
                             
         glm::mat4 model = glm::translate(glm::mat4(), WorldPos + LocPos);
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        
         // Draw a cube
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        for (int i = 0; i < 6; i++){
+            glUniform1i(glGetUniformLocation(Program, "faceFlag"), faceFlag[i]);
+            glDrawArrays(GL_TRIANGLES, i * 6, 6);
+        }
     }
     #ifdef Fuck
         std::cout << onDraw.size() << std::endl;
@@ -212,24 +219,13 @@ void Chunk::WrittenBack(){
 //End class Chunk
 ////////////////////////////////////////////////////////////////////////////////
 //class Chunk Manager
-ChunkManager::ChunkManager(int radius){
+ChunkManager::ChunkManager(){
     #ifdef boooom
         std::ofstream out;
         out.open("er.txt", std::ios::app);
         out << "CM C" << std::endl;
+        out.close();
     #endif
-    r = radius;
-    for (int i = 0; i < num; i++){
-        loaded[i] = false;
-        for (int j = 0; j < ceEventNum; j++){
-            EventMap[i][j] = false;
-        }
-    }
-    ChunkPosMap.clear();
-    
-    // Event System init
-    EventTimeHead = EventTimeTail = 0;
-    while (!EventQue.empty()) EventQue.pop();
 }
 
 ChunkManager::~ChunkManager(){
@@ -287,6 +283,52 @@ GLfloat ChunkManager::vertices[] = {
     -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
 };
 
+/*GLfloat ChunkManager::vertices[] = {
+    // Positions          // Normals           // Texture Coords
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+    -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+    -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+     0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+
+    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+
+    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
+};*/
+
+
 GLuint ChunkManager::VBO = 0;
 GLuint ChunkManager::containerVAO = 0;
 
@@ -296,19 +338,43 @@ void ChunkManager::Load(){
         out.open("er.txt");
         out << "Load begin" << std::endl;
     #endif
+    static bool Loaded = false;
+    if (Loaded) return;
+    Loaded = true;
+    
+    std::ifstream in;
+    in.open((ChunkFilePath + "ChunkConfig.txt").data());
+        in >> r;
+    in.close();
+    
+    for (int i = 0; i < num; i++){
+        loaded[i] = false;
+        for (int j = 0; j < ceEventNum; j++){
+            EventMap[i][j] = false;
+        }
+    }
+    ChunkPosMap.clear();
+    
+    // Event System init
+    EventTimeHead = EventTimeTail = 0;
+    while (!EventQue.empty()) EventQue.pop();
+    
     shader = Shader("src/cube.vs", "src/cube.frag");
     // Bind verteces array
     glGenVertexArrays(1, &containerVAO);
+    
     glGenBuffers(1, &VBO);
     #ifdef boooom
         out << "test point 1" << std::endl;
     #endif
+
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     #ifdef boooom
         out << "test point 1" << std::endl;
     #endif
+    
     glBindVertexArray(containerVAO);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
     glEnableVertexAttribArray(0);
@@ -319,13 +385,13 @@ void ChunkManager::Load(){
     glBindVertexArray(0);
     
     // Texture load
-    glGenTextures(1, &diffuseMap);
+    /*glGenTextures(1, &diffuseMap);
     glGenTextures(1, &specularMap);
     glGenTextures(1, &emissionMap);
     int width, height;
     unsigned char* image;
     // Diffuse map
-    image = SOIL_load_image((TempPath + "container2.png").data(), &width, &height, 0, SOIL_LOAD_RGB);
+    image = SOIL_load_image((BlockTexture + "grass_side.png").data(), &width, &height, 0, SOIL_LOAD_RGB);
     glBindTexture(GL_TEXTURE_2D, diffuseMap);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -335,7 +401,7 @@ void ChunkManager::Load(){
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_NEAREST);
     // Specular map
-    image = SOIL_load_image((TempPath + "container2_specular.png").data(), &width, &height, 0, SOIL_LOAD_RGB);
+    image = SOIL_load_image((BlockTexture + "grass_side.png").data(), &width, &height, 0, SOIL_LOAD_RGB);
     glBindTexture(GL_TEXTURE_2D, specularMap);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -348,8 +414,10 @@ void ChunkManager::Load(){
     
     // Set texture units
     shader.Use();
-    glUniform1i(glGetUniformLocation(shader.Program, "material.diffuse"),  0);
-    glUniform1i(glGetUniformLocation(shader.Program, "material.specular"), 1);
+    glUniform1i(glGetUniformLocation(shader.Program, "material[0].diffuse"),  0);
+    glUniform1i(glGetUniformLocation(shader.Program, "material[0].specular"), 1);
+    glUniform1f(glGetUniformLocation(shader.Program, "material[0].shininess"), 32.0f);
+    glUniform1i(glGetUniformLocation(shader.Program, "DirFlag"), 0);*/
     #ifdef boooom
 
         out << "Load end" << std::endl;
@@ -472,16 +540,17 @@ void ChunkManager::CheckPos(){
 }
 
 void ChunkManager::Display(){
+    #ifdef boooom
+        std::ofstream out;
+        out.open("er.txt", std::ios::app);
+    #endif
     shader.Use();
     const Camera &camera = Model::getCamera();
         
-        GLint viewPosLoc = glGetUniformLocation(shader.Program, "viewPos");
-        glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z);
-        // Set material properties
-        glUniform1f(glGetUniformLocation(shader.Program, "material.shininess"), 32.0f);
+    GLint viewPosLoc = glGetUniformLocation(shader.Program, "viewPos");
+    glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z);
     
     Light::Apply(shader.Program);
-    
     
     // Create camera transformations
     glm::mat4 view = camera.GetViewMatrix();
@@ -494,13 +563,33 @@ void ChunkManager::Display(){
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
     
         // Bind diffuse map
-        glActiveTexture(GL_TEXTURE0);
+        /*glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, diffuseMap);
         // Bind specular map
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, specularMap);
+        glBindTexture(GL_TEXTURE_2D, specularMap);*/
+    
+    MateriaType mt[3] = {mtGrassTop, mtGrassSide, mtDirt}; // top side bottom
+    int textureMap[3][2];
+    Materia::Apply(mt, textureMap, 3);
+
+    for (int i = 0; i < 3; i++){
+        char num[3];
+        itoa(i, num, 10);
+        std::string temp = std::string("material[") + num + "].", name[2] = {"diffuse", "specular"};
+        
+        for (int j = 0; j < 2; j++){
+            glUniform1i(glGetUniformLocation(shader.Program, (temp + name[j]).data()), textureMap[i][j]);
+            #ifdef boooom
+                out <<  (temp + name[j]) << " textureMap" << textureMap[i][j] << std::endl;
+            #endif  
+        }
+        glUniform1f(glGetUniformLocation(shader.Program, (temp +  "shininess").data()), 32.0f);
+    }
     
     glBindVertexArray(containerVAO);
+    
+    
     
     for (int i = 0; i < num; i++)
     if (loaded[i]){
@@ -508,6 +597,10 @@ void ChunkManager::Display(){
     }
     
     glBindVertexArray(0);
+    
+    #ifdef boooom
+        out.close();
+    #endif
 }
 
 void ChunkManager::RunEvent(){
@@ -566,6 +659,7 @@ void ChunkManager::RunEvent(){
     out.close();
     #endif
 }
+
 void ChunkManager::PushEvent(int time, int chunkId, ChunkEvent type, int x, int y){
     if (EventMap[chunkId][type]){
         return;
@@ -595,6 +689,17 @@ BlockType ChunkManager::getBlockType(std::PII cn, unsigned int bn){
         return chunk[ChunkPosMap[cn]].block[bn].bt;
     }
     return Empty;
+}
+
+BlockType ChunkManager::getBlockType(glm::vec3 worldPos){
+    int rx = round(worldPos.x);
+    int rz = round(worldPos.z);
+    int xflag = rx < 0;
+    int zflag = rz < 0;
+    int x = (rx + xflag) / Chunk::xLength - xflag;
+    int y = (rz + zflag) / Chunk::zLength - zflag;
+    
+    return getBlockType(std::make_pair(x, y), round(worldPos.y));
 }
 
 void ChunkManager::RemoveCube(std::PII cPos, unsigned int bn){

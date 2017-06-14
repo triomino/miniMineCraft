@@ -7,7 +7,8 @@
 enum BlockType{
     Empty,
     Grass,
-    Soil,
+    Dirt,
+    Cloud,
     BlockTypeNum
 };
 
