@@ -42,9 +42,7 @@ public:
     void setRight(glm::vec3 cr){
         Right = cr;
     }
-    void setYaw(GLfloat yaw){
-        Yaw = yaw;
-    }
+    void setYaw(GLfloat yaw);
     
     void Load();
     void Display();

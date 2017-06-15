@@ -85,9 +85,10 @@ void Light::LoadSun(){
     SunShader = Shader("src/sun.vs", "src/sun.frag");
     std::ifstream in;
     in.open(LightSunPath.data());
-    in >> dl[0].ambient.x >> dl[0].ambient.y >> dl[0].ambient.z;
+    /*in >> dl[0].ambient.x >> dl[0].ambient.y >> dl[0].ambient.z;
     in >> dl[0].diffuse.x >> dl[0].diffuse.y >> dl[0].diffuse.z;
     in >> dl[0].specular.x >> dl[0].specular.y >> dl[0].specular.z;
+    */
     in.close();
     
     LoadOBJ(ModelBallPath, SunVAO, SunVerticesNum);
@@ -116,10 +117,35 @@ void Light::Apply(GLuint Program){
     glUniform1f(glGetUniformLocation(Program, "spotLight.outerCutOff"), glm::cos(glm::radians(15.0f)));
 }
 
+const float MAX_SUN_AMBIENT = 0.2;
+const float MIN_SUN_AMBIENT = 0.05;
+const float MAX_SUN_DIFFUSE = 0.7;
+const float MIN_SUN_DIFFUSE = 0.1;
+const float MAX_SUN_SPECULAR = 0.4;
+const float MIN_SUN_SPECULAR = 0.1;
+
 void Light::SunMove(){
     const Camera &camera = Model::getCamera();
     SunAngle += SunAngularSpeed * Model::deltaTime;
     dl[0].direction = glm::vec3(-cos(glm::radians(SunAngle)), -sin(glm::radians(SunAngle)), 0.0f);
+    
+    if (SunAngle > 360.0f){
+        SunAngle -= 360.f;
+    }
+    float x, y, z;
+    if (SunAngle > 0.0f && SunAngle < 180.0f){
+        x = MAX_SUN_AMBIENT - fabs(90.0f - SunAngle) / 90.0f * (MAX_SUN_AMBIENT - MIN_SUN_AMBIENT);
+        y = MAX_SUN_DIFFUSE - fabs(90.0f - SunAngle) / 90.0f * (MAX_SUN_DIFFUSE - MIN_SUN_DIFFUSE);
+        z = MAX_SUN_SPECULAR - fabs(90.0f - SunAngle) / 90.0f * (MAX_SUN_SPECULAR - MIN_SUN_SPECULAR);
+    }
+    else {
+        x = MIN_SUN_AMBIENT;
+        y = MIN_SUN_DIFFUSE;
+        z = MIN_SUN_SPECULAR;
+    }
+    dl[0].ambient = glm::vec3(x, x, x);
+    dl[0].diffuse = glm::vec3(y, y, y);
+    dl[0].specular = glm::vec3(z, z, z);
 }
 
 void Light::Display(){

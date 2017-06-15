@@ -26,6 +26,7 @@ void do_movement()
     Camera &camera = Model::getCamera();
     // Camera controls
     const bool *keys = Model::getKeyPressed();
+    static float lastTime = -2.0f;
     
     if (keys[GLFW_KEY_W]){
         camera.ProcessKeyboard(FORWARD, Model::deltaTime);
@@ -43,11 +44,26 @@ void do_movement()
     if (keys[GLFW_KEY_Q]){
         camera.nextCameraMode();
     }
+    for (int i = 0; i < 9; i++){
+        if (keys[GLFW_KEY_0 + i]){
+            Model::PuttingBT = BlockType(i);
+        }
+    }
+
     
     camera.syncPlayer(player);
     if (camera.camera_mode != Roaming){
         player.ProcessKeyboard(keys, Model::deltaTime);
     }
+    if (keys[GLFW_KEY_E]){
+        float currentTime = Model::lastFrame + Model::deltaTime;
+        if (currentTime - lastTime > 0.2f){
+            Model::OP_MODE = 1 - Model::OP_MODE;
+            lastTime = currentTime;
+        }       
+    }
+    
+    
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)

@@ -6,7 +6,7 @@
 #include "Player.h"
 #include "Model.h"
 
-#define boooom
+//#define boooom
 
 Shader Player::shader;
 GLuint Player::VAO, Player::verticesNum;
@@ -59,11 +59,11 @@ void Player::Load(){
 
 Player::~Player(){
     delete []vertices;
-    /*std::ofstream out;
+    std::ofstream out;
     out.open((PlayerPath + "player.txt").data());
-    out << Position.x << " " << Position.y << " " << Position.z << std::endl;
+    out << Position.x << " " << Position.y + 0.5 << " " << Position.z << std::endl;
     out << MovementSpeed << " " << shininess << std::endl;
-    out.close();*/
+    out.close();
 }
 
 void Player::Display(){
@@ -107,14 +107,19 @@ void Player::Display(){
     glUniform1f(glGetUniformLocation(shader.Program, (temp +  "shininess").data()), shininess);
     
     glUniform1i(glGetUniformLocation(shader.Program, "faceFlag"), 0);
-     
-    glDrawArrays(GL_TRIANGLES, 0, verticesNum);
+    
+    if (camera.camera_mode == FirstPerspective){
+        //glDrawArrays(GL_TRIANGLES, 0, verticesNum /);
+    }
+    else {
+        glDrawArrays(GL_TRIANGLES, 0, verticesNum);
+    }
     
     glBindVertexArray(0);
 }
 
 //Control: Movement
-const GLfloat MAX_FALL_SPEED = 10.0f;
+const GLfloat MAX_FALL_SPEED = 100000.0f;
 const GLfloat JUMP_UP_SPEED = 5.0f;
 const GLfloat JUMP_HRZ_SPEED = 2.0f;
 const GLfloat GRAVITY = 9.8f;
@@ -125,7 +130,7 @@ const GLfloat MAX_HRZ_SPEED = 5.982;
 
 const GLfloat EPS = 1e-2;
 
-const GLfloat ENG_REDUCE = 0.1;
+const GLfloat ENG_REDUCE = 0.5;
 void Player::ProcessKeyboard(const bool *keys, GLfloat deltaTime){
     #ifdef boooom
         std::ofstream out;
@@ -181,22 +186,28 @@ void Player::ProcessKeyboard(const bool *keys, GLfloat deltaTime){
     #endif
     
     glm::vec3 displacement = velocity * deltaTime;
-    while (collision(0.0f, displacement.y, 0.0f)){
+    int tot = 0;
+    while (collision(0.0f, displacement.y, 0.0f) && (tot++ < 3)){
         velocity.y *= ENG_REDUCE;
         displacement.y *= ENG_REDUCE;
     }
-    while (collision(displacement.x , 0.0f, 0.0f)){
+    while (collision(displacement.x , 0.0f, 0.0f) && (tot++ < 6)){
         velocity.x *= ENG_REDUCE;
         displacement.x *= ENG_REDUCE;
     }
 
-    while (collision(0.0f, 0.0f, displacement.z)){
+    while (collision(0.0f, 0.0f, displacement.z)&& (tot++ < 9)){
         velocity.z *= ENG_REDUCE;
         displacement.z *= ENG_REDUCE;
     }
 
     if (!collision(displacement)){
         Position += displacement;
+    }
+    else {
+        if (!collision(0.0f, displacement.y, 0.0f)){
+            Position += glm::vec3(0.0f, displacement.y, 0.0f);
+        }
     }
     
     #ifdef boooom
@@ -206,6 +217,15 @@ void Player::ProcessKeyboard(const bool *keys, GLfloat deltaTime){
           out <<"pos" << Position.x << " " << Position.y << " " << Position.z << std::endl;
         out.close();
     #endif 
+}
+
+void Player::setYaw(GLfloat yaw){
+    float temp = Yaw;
+    Yaw = yaw;
+    calPlayerModelMatrix();
+    if (collision(0.0f, 0.0f, 0.0f)){
+        Yaw = temp;
+    }
 }
 
 bool Player::onGround(){
@@ -221,7 +241,7 @@ bool Player::collision(glm::vec3 disp){
     std::ofstream out ;
     out.open("d2.txt", std::ios::app);
     #endif
-    /*for (int i = 0; i < 9; i += 3){
+    for (int i = 0; i < ClVerticesNum; i += 3){
         #ifdef boooom
             out << i << std::endl;
         #endif
@@ -236,16 +256,25 @@ bool Player::collision(glm::vec3 disp){
         #ifdef boooom
             out << i << std::endl;
         #endif
-    }*/
+    }
     
-    glm::vec4 p = PlayerModelMatrix * glm::vec4(vertices[0], vertices[1], vertices[2], 1.0f);
+    //glm::vec4 p = PlayerModelMatrix * glm::vec4(vertices[0], vertices[1], vertices[2], 1.0f);
+    #ifdef boooom
+        out << p.x << " " << p.y << " " << p.z << std::endl;
+    #endif
+    //glm::vec3 t = glm::vec3(disp.x, disp.y, disp.z);
     
+    //bool x = Model::hasCube(t +  disp);
+    //if (x){
+    // return true;
+    //}
     #ifdef boooom
         out << " out " << std::endl;
         out.close();
     #endif
-    return Model::hasCube(Position + disp);
-    return false;
+    
+    bool u = Model::hasCube(Position + disp);
+    return u;
 }
 
 void Player::calPlayerModelMatrix(){

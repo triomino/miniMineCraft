@@ -48,12 +48,12 @@ public:
     static const float SunAngularSpeed = 15.0f;
     static const float SunDistance = 80.0f;
     static const float SunSize = 1.0f;
+    static float SunAngle;
 private:
     static DirLight dl[max_num];
     static PointLight pl[max_num];
     
     // sun
-    static float SunAngle;
     static Shader SunShader;
     static GLuint SunVAO, SunVerticesNum;
     

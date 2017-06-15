@@ -31,7 +31,7 @@ private:
     
     std::set<int> onDraw;
     
-    static const int FileSize = 131072;
+    static const int FileSize = 131072 * 2;
     static char temp[FileSize];
     
 public:
@@ -98,6 +98,7 @@ public:
     BlockType getBlockType(std::PII cn, unsigned int bn);
     BlockType getBlockType(glm::vec3 worldPos);
     void RemoveCube(std::PII cPos, unsigned int bn);
+    void AddCube(std::PII cPos, unsigned int bn, BlockType bt);
     // Event System
     void RunEvent();
     void PushEvent(int time, int chunkId, ChunkEvent type, int x = 0, int y = 0);

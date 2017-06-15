@@ -45,7 +45,7 @@ uniform PointLight pointLights[NR_POINT_LIGHTS];
 uniform Material material[3];
 
 uniform int faceFlag;
-uniform bool Choosed;
+uniform int Choosed;
 
 // Function prototypes
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);
@@ -64,8 +64,11 @@ void main()
     
     // result += CalcSpotLight(spotLight, norm, FragPos, viewDir, 1);    
     
-    if (Choosed) {
+    if (Choosed == 1) {
         result /= 2.0f;
+    }
+    if (Choosed == 2){
+        result = (result + vec3(1.0f)) / 2.0f;
     }
     color = vec4(result, 1.0f);
 }

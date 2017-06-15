@@ -23,12 +23,12 @@
 #include "Shader.h"
 
 // Game Objects
+#include "Materia.h"
 #include "Camera.h"
 #include "Player.h"
 #include "Block.h"
 #include "Chunk.h"
 #include "Light.h"
-#include "Materia.h"
 
 class Model{
 private:
@@ -55,9 +55,18 @@ public:
     static std::PII ChoosingChunk;
     static int ChoosingCube;
     
+    // current Choosing Cube
+    static std::PII PuttingChunkPos;
+    static int PuttingCube;
+    static BlockType PuttingBT;
+    
     // Check before drawing
     static void CheckPos();
     static void CheckChoosingCube();
+    
+    // check putting
+    static void CheckPuttingCube();
+    static int OP_MODE;
     
     // Sun Move
     static void SunMove();

@@ -1,14 +1,18 @@
 #ifndef __MATERIA_H__
 #define __MATERIA_H__
 
-#include "Model.h"
-
+#include <string>
 enum MateriaType{
     mtContainer,
     mtDirt,
     mtGrassSide,
     mtGrassTop,
     mtSteve,
+    mtCloud,
+    mtWater,
+    mtPumpkinTop,
+    mtPumpkinSide,
+    mtPumpkinBottom,
     MateriaTypeNum
 };
 
@@ -18,8 +22,15 @@ const std::string MateriaFile[MateriaTypeNum][2] = {
     {"blocks/dirt.png", "blocks/dirt.png"},
     {"blocks/grass_side.png", "blocks/grass_side.png"},
     {"blocks/grass_top.png", "blocks/grass_top.png"},
-    {"Steve.png", "Steve.png"}
+    {"Steve.png", "Steve.png"},
+    {"blocks/cloud.png", "blocks/cloud.png"},
+    {"", ""},
+    {"blocks/pumpkin_top.png", "blocks/pumpkin_top.png"},
+    {"blocks/pumpkin_face_on.png", "blocks/pumpkin_face_on.png"},
+    {"blocks/pumpkin_top.png", "blocks/pumpkin_top.png"}
 };
+
+#include "Model.h"
 
 class Materia{
 public:

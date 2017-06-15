@@ -31,6 +31,12 @@ bool Model::hasChoosingCube;
 std::PII Model::ChoosingChunk;
 int Model::ChoosingCube;
 
+std::PII Model::PuttingChunkPos;
+int Model::PuttingCube;
+BlockType Model::PuttingBT = Dirt;
+
+int Model::OP_MODE = 0;
+
 // listeners
 void (*Model::key_callback)(GLFWwindow* window, int key, int scancode, int action, int mode) = NULL;
 void (*Model::mouse_callback)(GLFWwindow* window, double xpos, double ypos) = NULL;
@@ -88,7 +94,14 @@ void Model::CheckPos(){
 }
 
 void Model::Display(){
-    glClearColor(0.0f, 127.0f / 255.0f, 1.0f, 1.0f);
+    float x = 0.0f;
+    float y = 127.0f / 255.0f;
+    float z = 1.0f;
+    
+    float coe = 1.0f - fabs(Light::SunAngle - 90.0f) / 90.0f;
+    if (coe < 0.0f) coe = 0.0f;
+    
+    glClearColor(coe * x, coe * y, coe * z, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     camera.syncPlayer(player);
@@ -110,7 +123,10 @@ GLFWwindow* Model::getWindow(){
 }
 
 void Model::left_button_pressed(){
-    if (hasChoosingCube) cm.RemoveCube(ChoosingChunk, ChoosingCube);
+    if (OP_MODE == 0) if (hasChoosingCube) cm.RemoveCube(ChoosingChunk, ChoosingCube);
+    if (OP_MODE == 1){
+        cm.AddCube(PuttingChunkPos, PuttingCube, PuttingBT);
+    }
 }
 
 void Model::right_button_pressed(){
@@ -133,10 +149,35 @@ void Model::CheckChoosingCube(){
         dx = x - cx * xl;
         dz = z - cz * zl;
         bn = dx * zl * yl + dz * yl + round(testPoint.y);
+        
         if (cm.getBlockType(std::make_pair(cx, cz), bn) != Empty){
             hasChoosingCube = true;
             ChoosingChunk = std::make_pair(cx, cz);
             ChoosingCube = bn;
+            break;
+        }
+    }
+}
+
+void Model::CheckPuttingCube(){
+    glm::vec3 step = glm::normalize(camera.Front) / 10.0f;
+    glm::vec3 testPoint = camera.Position + step;
+    int xl = Chunk::xLength;
+    int yl = Chunk::yLength;
+    int zl = Chunk::zLength;
+    unsigned int bn;
+    int x, z, cx, cz, dx, dz;
+    for (int i = 0; i < 50; i++, testPoint += step){
+        x = round(testPoint.x);
+        z = round(testPoint.z);
+        cx = (x + (x < 0)) / xl - (x < 0);
+        cz = (z + (z < 0)) / zl - (z < 0);
+        dx = x - cx * xl;
+        dz = z - cz * zl;
+        bn = dx * zl * yl + dz * yl + round(testPoint.y);
+        PuttingChunkPos = std::make_pair(cx, cz);
+        PuttingCube = bn;
+        if (cm.getBlockType(std::make_pair(cx, cz), bn) != Empty){
             break;
         }
     }

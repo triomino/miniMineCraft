@@ -29,7 +29,7 @@
 #include "Model.h"
 #include "Control.h"
 
-//#define boooom
+#define boooom
 
 // Window dimensions
 const GLuint WIDTH = 1024, HEIGHT = 768;
@@ -61,11 +61,14 @@ int main()
         Model::lastFrame = currentFrame;
         
         Model::CheckPos();
-        Model::CheckChoosingCube();
+        if (Model::OP_MODE == 0) Model::CheckChoosingCube();
+        Model::CheckPuttingCube();
         Model::SunMove();
         #ifdef boooom
-            glm::vec3 p = Model::ChoosingCube;
-            if (Model::hasChoosingCube) out << p.x << " " << p.y << " " << p.z << std::endl;
+            out <<"1--------------" << Model::ChoosingChunk.first << Model::ChoosingChunk.second << std::endl;
+            out << Model::ChoosingCube << std::endl;
+            out << "2--------------" << Model::PuttingChunkPos.first << Model::PuttingChunkPos.second << std::endl;
+            out << Model::PuttingCube << std::endl;
         #endif
 
      

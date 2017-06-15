@@ -32,15 +32,19 @@ void Chunk::randomProduce(){
             int temp = Random::GetInt(-10, 11);
             if (temp < -8) k--;
             if (temp > 8) k++;
-            if (k < yHalf - 3) k = yHalf - 3;
-            if (k > yHalf + 3) k = yHalf + 3;
-            
+            if (k < yHalf - 3) k = yHalf - 2;
+            if (k > yHalf + 3) k = yHalf + 2;
         }
     }
     // Cloud Produce
-    /*if (Random::GetInt(10) == 0){
-        for 
-    }*/
+    if (Random::GetInt(10) == 0){
+        int h = Random::GetInt(10);
+        for (int i = 0; i <xLength; i++){
+            for (int j = 0; j < zLength; j++){
+                block[i * zLength * yLength + j * yLength + yLength - h].bt = Cloud;
+            }
+        }
+    }
 }
 
 
@@ -102,6 +106,7 @@ void Chunk::CheckAdEmpty(){
 }
 
 void Chunk::Display(){
+    static BlockType lastBT = Empty;
     #ifdef boooom
         std::ofstream out;
         out.open("er.txt", std::ios::app);
@@ -115,12 +120,12 @@ void Chunk::Display(){
     
     int faceFlag[] = {1, 1, 1, 1, 2, 0};
     for (std::set<int>::iterator it = onDraw.begin(); it != onDraw.end(); it++){
-        
-        if (Model::hasChoosingCube && Position.x == Model::ChoosingChunk.first && Position.y == Model::ChoosingChunk.second && Model::ChoosingCube == *it){
-            glUniform1i(ChooseLoc, true);
+        BlockType bt = block[*it].bt;
+        if (Model::OP_MODE == 0 && Model::hasChoosingCube && Position.x == Model::ChoosingChunk.first && Position.y == Model::ChoosingChunk.second && Model::ChoosingCube == *it){
+            glUniform1i(ChooseLoc, 1);
         }
         else {
-            glUniform1i(ChooseLoc, false);
+            glUniform1i(ChooseLoc, 0);
         }
         LocPos = glm::vec3(*it / (yLength * zLength),
                             *it & yLength - 1,
@@ -128,6 +133,58 @@ void Chunk::Display(){
                             
         glm::mat4 model = glm::translate(glm::mat4(), WorldPos + LocPos);
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        
+        //block[*it].MateriaApply(Program);
+        // set material
+        if (bt != lastBT){
+            MateriaType mt[3] = {blockMateria[bt][0], blockMateria[bt][1], blockMateria[bt][2]};
+            int res[3][2] = {0};
+            Materia::Apply(mt, res, 3);
+            glUniform1i(glGetUniformLocation(Program, "material[0].diffuse"), res[0][0]);
+            glUniform1i(glGetUniformLocation(Program, "material[0].specular"), res[0][1]);
+            glUniform1i(glGetUniformLocation(Program, "material[1].diffuse"), res[1][0]);
+            glUniform1i(glGetUniformLocation(Program, "material[1].specular"), res[1][1]);
+            glUniform1i(glGetUniformLocation(Program, "material[2].diffuse"), res[2][0]);
+            glUniform1i(glGetUniformLocation(Program, "material[2].specular"), res[2][1]);
+            glUniform1f(glGetUniformLocation(Program, "material[0].shininess"), 32.0f);
+            glUniform1f(glGetUniformLocation(Program, "material[1].shininess"), 32.0f);
+            glUniform1f(glGetUniformLocation(Program, "material[2].shininess"), 32.0f);
+            lastBT = bt;
+        }
+        
+        // Draw a cube
+        for (int i = 0; i < 6; i++){
+            glUniform1i(glGetUniformLocation(Program, "faceFlag"), faceFlag[i]);
+            glDrawArrays(GL_TRIANGLES, i * 6, 6);
+        }
+    }
+    if (Model::OP_MODE == 1 && Position.x == Model::PuttingChunkPos.first && Position.y == Model::PuttingChunkPos.second){
+        BlockType bt = Model::PuttingBT;
+        glUniform1i(ChooseLoc, 2);
+        LocPos = glm::vec3(Model::PuttingCube / (yLength * zLength),
+                            Model::PuttingCube & (yLength - 1),
+                            (Model::PuttingCube / yLength) % zLength);
+                            
+        glm::mat4 mt = glm::translate(glm::mat4(), WorldPos + LocPos);
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(mt));
+        
+        //block[*it].MateriaApply(Program);
+        // set material
+        if (bt != lastBT){
+            MateriaType mt[3] = {blockMateria[bt][0], blockMateria[bt][1], blockMateria[bt][2]};
+            int res[3][2] = {0};
+            Materia::Apply(mt, res, 3);
+            glUniform1i(glGetUniformLocation(Program, "material[0].diffuse"), res[0][0]);
+            glUniform1i(glGetUniformLocation(Program, "material[0].specular"), res[0][1]);
+            glUniform1i(glGetUniformLocation(Program, "material[1].diffuse"), res[1][0]);
+            glUniform1i(glGetUniformLocation(Program, "material[1].specular"), res[1][1]);
+            glUniform1i(glGetUniformLocation(Program, "material[2].diffuse"), res[2][0]);
+            glUniform1i(glGetUniformLocation(Program, "material[2].specular"), res[2][1]);
+            glUniform1f(glGetUniformLocation(Program, "material[0].shininess"), 32.0f);
+            glUniform1f(glGetUniformLocation(Program, "material[1].shininess"), 32.0f);
+            glUniform1f(glGetUniformLocation(Program, "material[2].shininess"), 32.0f);
+            lastBT = bt;
+        }
         
         // Draw a cube
         for (int i = 0; i < 6; i++){
@@ -254,19 +311,19 @@ GLfloat ChunkManager::vertices[] = {
     -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
     -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
 
-    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-    -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
-    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-    -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
-    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+    -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+    -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
 
-     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-     0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
-     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-     0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
-     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+     0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
 
     -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
      0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
@@ -540,19 +597,16 @@ void ChunkManager::Display(){
     int textureMap[3][2];
     Materia::Apply(mt, textureMap, 3);
 
-    for (int i = 0; i < 3; i++){
-        char num[3];
-        itoa(i, num, 10);
-        std::string temp = std::string("material[") + num + "].", name[2] = {"diffuse", "specular"};
-        
-        for (int j = 0; j < 2; j++){
-            glUniform1i(glGetUniformLocation(shader.Program, (temp + name[j]).data()), textureMap[i][j]);
-            #ifdef boooom
-                out <<  (temp + name[j]) << " textureMap" << textureMap[i][j] << std::endl;
-            #endif  
-        }
-        glUniform1f(glGetUniformLocation(shader.Program, (temp +  "shininess").data()), 32.0f);
-    }
+    glUniform1i(glGetUniformLocation(shader.Program, "material[0].diffuse"), textureMap[0][0]);
+    glUniform1i(glGetUniformLocation(shader.Program, "material[0].specular"), textureMap[0][1]);
+    glUniform1i(glGetUniformLocation(shader.Program, "material[1].diffuse"), textureMap[1][0]);
+    glUniform1i(glGetUniformLocation(shader.Program, "material[1].specular"), textureMap[1][1]);
+    glUniform1i(glGetUniformLocation(shader.Program, "material[2].diffuse"), textureMap[2][0]);
+    glUniform1i(glGetUniformLocation(shader.Program, "material[2].specular"), textureMap[2][1]);
+    glUniform1f(glGetUniformLocation(shader.Program, "material[0].shininess"), 32.0f);
+    glUniform1f(glGetUniformLocation(shader.Program, "material[1].shininess"), 32.0f);
+    glUniform1f(glGetUniformLocation(shader.Program, "material[2].shininess"), 32.0f);
+    
     
     glBindVertexArray(containerVAO);
     
@@ -723,5 +777,12 @@ void ChunkManager::RemoveCube(std::PII cPos, unsigned int bn){
     }
 }
 
+void ChunkManager::AddCube(std::PII cPos, unsigned int bn, BlockType bt){
+    int k;
+    if (ChunkPosMap.find(cPos) != ChunkPosMap.end()){
+        chunk[k = ChunkPosMap[cPos]].block[bn].bt = bt;
+        chunk[k].onDraw.insert(bn);
+    }
+}
 // End class ChunkManager
 #endif
