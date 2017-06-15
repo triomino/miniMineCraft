@@ -9,6 +9,7 @@ enum BlockType{
     Grass,
     Dirt,
     Cloud,
+    Water,
     BlockTypeNum
 };
 

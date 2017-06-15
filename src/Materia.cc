@@ -1,7 +1,7 @@
 #ifndef __MATERIA_CC__
 #define __MATERIA_CC__
 
-#define boooom
+//#define boooom
 #ifdef boooom
 #include <fstream>
 #endif
@@ -58,6 +58,14 @@ void Materia::Apply(MateriaType mt[], int res[][2], int num){
                 for (int t = 1; t < MAX_NUM; t++){
                     if (lastUsingTime[min_pos] > lastUsingTime[t]){
                         min_pos = t;
+                    }
+                }
+                for (int t = 0; t < MateriaTypeNum; t++){
+                    for (int s = 0; s < 2; s++){
+                        if (UsingIndices[t][s] == min_pos){
+                            UsingIndices[t][s] = -1;
+                            break;
+                        }
                     }
                 }
                 k = min_pos;

@@ -21,6 +21,8 @@
 
 void LoadOBJ(const std::string filename, GLuint &VAO, GLuint &size);
 
+void LoadOBJ(const std::string filename, GLuint &VAO, GLuint &size, std::vector<glm::vec3> &vertices);
+
 void LoadOBJ(const std::string filename, 
 	std::vector<glm::vec3> &positions, 
 	std::vector<glm::vec2> &textures, 

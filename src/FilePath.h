@@ -20,6 +20,9 @@ const std::string ModelBallPath = ModelPath + "ball.obj";
 //Texture
 const std::string BlockTexture = TexturePath + "blocks/";
 
+//Player
+const std::string PlayerPath = dataPath + "Player/";
+
 const std::string TempPath = TexturePath;
 
 #endif

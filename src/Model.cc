@@ -79,7 +79,8 @@ void Model::Init(){
     Light::Load();
     
     player.Load();
-    camera = Camera(glm::vec3(0.0f, 65.0f, 0.0f));
+    camera = Camera(glm::vec3(0.0f, 65.8f, 0.0f));
+    camera.syncPlayer(player);
 }
 
 void Model::CheckPos(){
@@ -90,13 +91,10 @@ void Model::Display(){
     glClearColor(0.0f, 127.0f / 255.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
+    camera.syncPlayer(player);
     cm.Display();
     Light::Display();
     player.Display();
-}
-
-Camera &Model::getCamera(){
-    return camera;
 }
 
 void Model::setKeyPressed(int key, bool value){
@@ -147,5 +145,20 @@ void Model::CheckChoosingCube(){
 void Model::SunMove(){
     Light::SunMove();
 }
+
+BlockType Model::getBlockType(float x, float y, float z){
+    return cm.getBlockType(glm::vec3(x, y, z));
+}
+
+bool Model::hasCube(glm::vec3 pos){
+    BlockType bt = cm.getBlockType(pos);
+    return bt != Empty && bt != Water && bt != Cloud;
+}
+
+bool Model::hasCube(float x, float y, float z){
+    BlockType bt = getBlockType(x, y, z);
+    return bt != Empty && bt != Water && bt != Cloud;
+}
+
 
 #endif

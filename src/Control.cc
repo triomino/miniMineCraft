@@ -20,19 +20,34 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 void do_movement()
 {
+    //Player player = Model::player;
+    
+    Player &player = Model::getPlayer();
     Camera &camera = Model::getCamera();
     // Camera controls
     const bool *keys = Model::getKeyPressed();
     
-    
-    if (keys[GLFW_KEY_W])
+    if (keys[GLFW_KEY_W]){
         camera.ProcessKeyboard(FORWARD, Model::deltaTime);
-    if (keys[GLFW_KEY_S])
+    }
+    if (keys[GLFW_KEY_S]){
         camera.ProcessKeyboard(BACKWARD, Model::deltaTime);
-    if (keys[GLFW_KEY_A])
+    }
+        
+    if (keys[GLFW_KEY_A]){
         camera.ProcessKeyboard(LEFT, Model::deltaTime);
-    if (keys[GLFW_KEY_D])
+    }
+    if (keys[GLFW_KEY_D]){
         camera.ProcessKeyboard(RIGHT, Model::deltaTime);
+    }
+    if (keys[GLFW_KEY_Q]){
+        camera.nextCameraMode();
+    }
+    
+    camera.syncPlayer(player);
+    if (camera.camera_mode != Roaming){
+        player.ProcessKeyboard(keys, Model::deltaTime);
+    }
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)

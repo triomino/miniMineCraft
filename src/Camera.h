@@ -9,26 +9,20 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-
-
-// Defines several possible options for camera movement. Used as abstraction to stay away from window-system specific input methods
-enum Camera_Movement {
-    FORWARD,
-    BACKWARD,
-    LEFT,
-    RIGHT
-};
+#include "Movement.h"
+#include "Player.h"
 
 // Default camera values
 const GLfloat YAW        = -90.0f;
 const GLfloat PITCH      =  0.0f;
-const GLfloat SPEED      =  10.0f;
+const GLfloat SPEED      =  4.317f;
 const GLfloat SENSITIVTY =  0.25f;
 const GLfloat ZOOM       =  45.0f;
 
 // Camera Mode
 enum CameraMode{
-    Gravity,
+    FirstPerspective,
+    ThirdPerspective,
     Roaming,
     CameraModeNum
 };
@@ -62,7 +56,7 @@ public:
         this->Yaw = yaw;
         this->Pitch = pitch;
         this->updateCameraVectors();
-        this->camera_mode = Roaming;
+        this->camera_mode = FirstPerspective;
     }
     // Constructor with scalar values
     Camera(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat upX, GLfloat upY, GLfloat upZ, GLfloat yaw, GLfloat pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVTY), Zoom(ZOOM)
@@ -72,6 +66,7 @@ public:
         this->Yaw = yaw;
         this->Pitch = pitch;
         this->updateCameraVectors();
+        this->camera_mode = FirstPerspective;
     }
 
     // Returns the view matrix calculated using Eular Angles and the LookAt Matrix
@@ -81,18 +76,20 @@ public:
     }
 
     // Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
-    void ProcessKeyboard(Camera_Movement direction, GLfloat deltaTime)
+    void ProcessKeyboard(Movement direction, GLfloat deltaTime)
     {
-        GLfloat velocity = this->MovementSpeed * deltaTime;
-        glm::vec3 tFront = camera_mode == Gravity ? glm::normalize(glm::cross(this->WorldUp, this->Right)) : this->Front;
-        if (direction == FORWARD)
-            this->Position += tFront * velocity;
-        if (direction == BACKWARD)
-            this->Position -= tFront * velocity;
-        if (direction == LEFT)
-            this->Position -= this->Right * velocity;
-        if (direction == RIGHT)
-            this->Position += this->Right * velocity;
+        if (camera_mode == Roaming){
+            GLfloat velocity = this->MovementSpeed * deltaTime;
+        
+            if (direction == FORWARD)
+                this->Position += this->Front * velocity;
+            if (direction == BACKWARD)
+                this->Position -= this->Front * velocity;
+            if (direction == LEFT)
+                this->Position -= this->Right * velocity;
+            if (direction == RIGHT)
+                this->Position += this->Right * velocity;
+        }
     }
 
     // Processes input received from a mouse input system. Expects the offset value in both the x and y direction.
@@ -130,8 +127,39 @@ public:
         if (this->Zoom >= b)
             this->Zoom = b;
     }
-    void setCameraMode(CameraMode cm){
-        camera_mode = cm;
+    void nextCameraMode(){
+        float currentTime = glfwGetTime();
+        static float lastTime = -2.0f;
+        if (currentTime - lastTime < 0.1f){
+            return ;
+        }
+        lastTime = currentTime;
+        camera_mode = int(camera_mode) == CameraModeNum - 1 ? CameraMode(0) : CameraMode(int(camera_mode) + 1);
+        
+    }
+    void syncPlayer(Player &p){
+        /*FirstPerspective,
+        ThirdPerspective,
+        Roaming*/
+        if (camera_mode == FirstPerspective){
+            p.setFront(Front);
+            p.setRight(Right);
+            p.setYaw(Yaw);
+            Position = p.getPos();
+            Position.y += 2.2f;
+            Position += Front * 0.6f;
+        }
+        else if (camera_mode == ThirdPerspective){
+            p.setFront(Front);
+            p.setRight(Right);
+            p.setYaw(Yaw);
+            Position = p.getPos();
+            Position.y += 2.0f;
+            Position -= Front * 1.0f;
+        }
+        else if (camera_mode == Roaming){
+            
+        }
     }
 
 private:
@@ -148,6 +176,7 @@ private:
         this->Right = glm::normalize(glm::cross(this->Front, this->WorldUp));  // Normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
         this->Up    = glm::normalize(glm::cross(this->Right, this->Front));
     }
+    
     
 };
 

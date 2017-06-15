@@ -3,7 +3,7 @@
 
 #include "Model.h"
 
-#define boooom
+//#define boooom
 #ifdef boooom
 #include <iostream>
 #include <fstream>
@@ -240,19 +240,19 @@ Shader ChunkManager::shader;
 
 GLfloat ChunkManager::vertices[] = {
     // Positions          // Normals           // Texture Coords
-    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
-     0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
-     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
-     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
-    -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
 
-    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
-     0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
-     0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
-     0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
+     0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
 
     -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
     -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
@@ -384,40 +384,7 @@ void ChunkManager::Load(){
     glEnableVertexAttribArray(2);
     glBindVertexArray(0);
     
-    // Texture load
-    /*glGenTextures(1, &diffuseMap);
-    glGenTextures(1, &specularMap);
-    glGenTextures(1, &emissionMap);
-    int width, height;
-    unsigned char* image;
-    // Diffuse map
-    image = SOIL_load_image((BlockTexture + "grass_side.png").data(), &width, &height, 0, SOIL_LOAD_RGB);
-    glBindTexture(GL_TEXTURE_2D, diffuseMap);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    SOIL_free_image_data(image);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_NEAREST);
-    // Specular map
-    image = SOIL_load_image((BlockTexture + "grass_side.png").data(), &width, &height, 0, SOIL_LOAD_RGB);
-    glBindTexture(GL_TEXTURE_2D, specularMap);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    SOIL_free_image_data(image);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_NEAREST);
-    glBindTexture(GL_TEXTURE_2D, 0);
     
-    // Set texture units
-    shader.Use();
-    glUniform1i(glGetUniformLocation(shader.Program, "material[0].diffuse"),  0);
-    glUniform1i(glGetUniformLocation(shader.Program, "material[0].specular"), 1);
-    glUniform1f(glGetUniformLocation(shader.Program, "material[0].shininess"), 32.0f);
-    glUniform1i(glGetUniformLocation(shader.Program, "DirFlag"), 0);*/
     #ifdef boooom
 
         out << "Load end" << std::endl;
@@ -692,14 +659,26 @@ BlockType ChunkManager::getBlockType(std::PII cn, unsigned int bn){
 }
 
 BlockType ChunkManager::getBlockType(glm::vec3 worldPos){
+    #ifdef boooom
+        std::ofstream out;
+        out.open("d2.txt", std::ios::app);
+        out << "Load begin" << std::endl;
+    #endif
     int rx = round(worldPos.x);
     int rz = round(worldPos.z);
     int xflag = rx < 0;
     int zflag = rz < 0;
     int x = (rx + xflag) / Chunk::xLength - xflag;
-    int y = (rz + zflag) / Chunk::zLength - zflag;
+    int z = (rz + zflag) / Chunk::zLength - zflag;
+    int dx = rx - x * Chunk::xLength;
+    int dz = rz - z * Chunk::zLength;
     
-    return getBlockType(std::make_pair(x, y), round(worldPos.y));
+    #ifdef boooom
+        out << "Load End" << std::endl;
+        out.close();
+    #endif
+    
+    return getBlockType(std::make_pair(x, z), dx * Chunk::zLength * Chunk::yLength + dz * Chunk::yLength + round(worldPos.y));
 }
 
 void ChunkManager::RemoveCube(std::PII cPos, unsigned int bn){

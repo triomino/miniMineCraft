@@ -1,6 +1,7 @@
 #ifndef __OBJ_CPP__
 #define __OBJ_CPP__
 
+#include <algorithm>
 //OBJ
 #include "obj.h"
 
@@ -73,6 +74,42 @@ void LoadOBJ(std::string filename,
 
 		}
 	}
+}
+
+bool VectorCMP(const glm::vec3 &a, const glm::vec3 &b){
+    if (a.x < b.x) return true;
+    if (a.x > b.x) return false;
+    if (a.y < b.y) return true;
+    if (a.y > b.y) return false;
+    if (a.z < b.y) return true;
+    return false;
+}
+
+void LoadOBJ(const std::string filename, GLuint &VAO, GLuint &size, std::vector<glm::vec3> &vertices){
+    LoadOBJ(filename, VAO, size);
+
+
+	std::ifstream in(filename);
+	if (!in) {
+		cerr << "Can't open the file " << filename << endl;
+	}
+
+	string line, str;
+
+	int Case = 0;
+	while (getline(in, line)) {
+		istringstream str_in(line);
+		str_in >> str;
+		if (str == "v") {
+			GLfloat x, y, z;
+			str_in >> x >> y >> z;
+			vertices.push_back(glm::vec3(x, y, z));
+		}
+	}
+    std::sort(vertices.begin(), vertices.end(), VectorCMP);
+    vector<glm::vec3>::iterator end = unique(vertices.begin(), vertices.end());
+    vertices.erase(end, vertices.end());
+    
 }
 
 void LoadOBJ(const std::string filename, GLuint &VAO, GLuint &size){

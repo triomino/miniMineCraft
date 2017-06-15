@@ -55,8 +55,6 @@ public:
     static std::PII ChoosingChunk;
     static int ChoosingCube;
     
-    const static int ChunkRange = 4;
-    
     // Check before drawing
     static void CheckPos();
     static void CheckChoosingCube();
@@ -70,8 +68,9 @@ public:
     // Entrance of drawing
     static void Display();
 
-    
-    static Camera &getCamera();
+    // data access
+    static Camera &getCamera(){ return camera; }
+    static Player &getPlayer(){ return player; }
     
     // keyboard
     static void setKeyPressed(int key, bool value);
@@ -83,6 +82,12 @@ public:
     
     // window
     static GLFWwindow* getWindow(); 
+    
+    // Cube test
+    static BlockType getBlockType(float x, float y, float z);
+    static bool hasCube(float x, float y, float z);
+    static bool hasCube(glm::vec3(pos));
+    static BlockType getBlockType(glm::vec3(pos));
     
     // register
     static void KeyboardRegister(void (*k)(GLFWwindow* window, int key, int scancode, int action, int mode)){

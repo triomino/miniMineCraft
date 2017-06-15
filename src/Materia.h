@@ -27,7 +27,7 @@ public:
         unsigned char *image;
         int width, height;
     };
-    const static int MAX_NUM = 8;
+    const static int MAX_NUM = 16;
 private:
     static int UsingIndices[MateriaTypeNum][2];
     static Image image[MateriaTypeNum][2];
