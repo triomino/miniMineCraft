@@ -11,7 +11,6 @@
 int tttt = 0;
 #endif
 
-
 char Chunk::temp[Chunk::FileSize] = "";
 
 //class Chunk methods
@@ -49,9 +48,9 @@ void Chunk::randomProduce(){
 
 
 void Chunk::CheckAdEmpty(){
-    const int dx[] = {0, 0, 0, 0, -1, 1};
-    const int dz[] = {0, 0, -1, 1, 0, 0};
-    const int dy[] = {-1, 1, 0, 0, 0, 0};
+    const int dx[] = {0, 0, -1, 1, 0, 0};
+    const int dz[] = {-1, 1, 0, 0, 0, 0};
+    const int dy[] = {0, 0, 0, 0, -1, 1};
     const int is = zLength * yLength;
     const int js = yLength;
     int cnt = 0;
@@ -62,35 +61,41 @@ void Chunk::CheckAdEmpty(){
         for (j = 0; j < zLength; j++){
             for (k = 0; k < yLength; k++, cnt++, pb++){
                 if (pb->bt != Empty && onDraw.find(cnt) == onDraw.end()){
-                    pad = NULL;
-                    for (d = 0; d < 6; d++)
-                    if (k + dy[d] >= 0 && k + dy[d] < yLength){
-                        if (i + dx[d] < 0){
-                            if (AdjChunk[2])
-                            pad = AdjChunk[2]->block + cnt + is * (xLength - 1);
+                    for (d = 0; d < 6; d++){
+                        pad = NULL;
+                        if (k + dy[d] >= 0 && k + dy[d] < yLength){
+                            if (i + dx[d] < 0){
+                                if (AdjChunk[2])
+                                pad = AdjChunk[2]->block + cnt + is * (xLength - 1);
+                            }
+                            else if (i + dx[d] >= xLength){
+                                if (AdjChunk[3])
+                                pad = AdjChunk[3]->block + cnt - is * (xLength - 1);
+                            }
+                            else if (j + dz[d] < 0){
+                                if (AdjChunk[0])
+                                pad = AdjChunk[0]->block + cnt + js * (zLength - 1);
+                            }
+                            else if (j + dz[d] >= zLength){
+                                if (AdjChunk[1])
+                                pad = AdjChunk[1]->block + cnt - js * (zLength - 1);
+                            }
+                            else {
+                                pad = block + cnt + dx[d] * is + dz[d] * js + dy[d];
+                            }
                         }
-                        else if (i + dx[d] >= xLength){
-                            if (AdjChunk[3])
-                            pad = AdjChunk[3]->block + cnt - is * (xLength - 1);
-                        }
-                        else if (j + dz[d] < 0){
-                            if (AdjChunk[0])
-                            pad = AdjChunk[0]->block + cnt + js * (zLength - 1);
-                        }
-                        else if (j + dz[d] >= zLength){
-                            if (AdjChunk[1])
-                            pad = AdjChunk[1]->block + cnt - js * (zLength - 1);
+                        if (pad){
+                            pb->AdjType[d] = pad->bt;
                         }
                         else {
-                            pad = block + cnt + dx[d] * is + dz[d] * js + dy[d];
-                        }
-                        
-                        if (pad && pad->bt == Empty){
-                            break;
+                            pb->AdjType[d] = BlockTypeNum;
                         }
                     }
-                    if (pad && pad->bt == Empty){
-                        onDraw.insert(cnt);
+                    for (d = 0; d < 6; d++){
+                        if (pb->AdjType[d] == Empty){
+                            onDraw.insert(cnt);
+                            break;
+                        }
                     }
                 }
             }
@@ -154,8 +159,10 @@ void Chunk::Display(){
         
         // Draw a cube
         for (int i = 0; i < 6; i++){
-            glUniform1i(glGetUniformLocation(Program, "faceFlag"), faceFlag[i]);
-            glDrawArrays(GL_TRIANGLES, i * 6, 6);
+            if (block[*it].AdjType[i] == Empty){
+                glUniform1i(glGetUniformLocation(Program, "faceFlag"), faceFlag[i]);
+                glDrawArrays(GL_TRIANGLES, i * 6, 6);
+            }
         }
     }
     if (Model::OP_MODE == 1 && Position.x == Model::PuttingChunkPos.first && Position.y == Model::PuttingChunkPos.second){
@@ -199,6 +206,32 @@ void Chunk::Display(){
     #ifdef boooom
         out.close();
     #endif
+}
+
+void Chunk::DrawShadowDepth(GLuint Program){
+    GLint modelLoc = glGetUniformLocation(Program, "model");
+    glm::vec3 WorldPos = glm::vec3(Position.x * xLength, 0.0f, Position.y * zLength);
+    glm::vec3 LocPos;
+    
+    
+    for (std::set<int>::iterator it = onDraw.begin(); it != onDraw.end(); it++){
+        BlockType bt = block[*it].bt;
+        LocPos = glm::vec3(*it / (yLength * zLength),
+                            *it & yLength - 1,
+                            *it / yLength & zLength - 1);
+                            
+        glm::mat4 model = glm::translate(glm::mat4(), WorldPos + LocPos);
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        
+        
+        // Draw a cube
+        for (int i = 0; i < 6; i++){
+            if (block[*it].AdjType[i] == Empty){
+                glDrawArrays(GL_TRIANGLES, i * 6, 6);
+            }
+        }
+    }
+    
 }
 
 void Chunk::Load(int x, int z){
@@ -294,6 +327,8 @@ ChunkManager::~ChunkManager(){
 }
 
 Shader ChunkManager::shader;
+
+// -z z -x
 
 GLfloat ChunkManager::vertices[] = {
     // Positions          // Normals           // Texture Coords
@@ -575,6 +610,7 @@ void ChunkManager::Display(){
     glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z);
     
     Light::Apply(shader.Program);
+    Shadow::Apply(shader.Program);
     
     // Create camera transformations
     glm::mat4 view = camera.GetViewMatrix();
@@ -585,6 +621,8 @@ void ChunkManager::Display(){
     // Pass the matrices to the shader
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+    
+    glUniformMatrix4fv(glGetUniformLocation(shader.Program, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(Light::getSunSpaceMatrix()));
     
         // Bind diffuse map
         /*glActiveTexture(GL_TEXTURE0);
@@ -737,9 +775,9 @@ BlockType ChunkManager::getBlockType(glm::vec3 worldPos){
 
 void ChunkManager::RemoveCube(std::PII cPos, unsigned int bn){
     int k;
-    const int dx[] = {0, 0, 0, 0, -1, 1};
-    const int dz[] = {0, 0, -1, 1, 0, 0};
-    const int dy[] = {-1, 1, 0, 0, 0, 0};
+    const int dx[] = {0, 0, -1, 1, 0, 0};
+    const int dz[] = {-1, 1, 0, 0, 0, 0};
+    const int dy[] = {0, 0, 0, 0, -1, 1};
     const int xl = Chunk::xLength;
     const int yl = Chunk::yLength;
     const int zl = Chunk::zLength;
@@ -770,8 +808,9 @@ void ChunkManager::RemoveCube(std::PII cPos, unsigned int bn){
             else if (z + dz[d] >= zl){
                 p = bn - js * (zl - 1), c = chunk[k].AdjChunk[1];
             }
-            if (c && c->block[p].bt != Empty && c->onDraw.find(p) == c->onDraw.end()){
-                c->onDraw.insert(p);
+            if (c && c->block[p].bt != Empty){
+                if (c->onDraw.find(p) == c->onDraw.end()) c->onDraw.insert(p);
+                c->block[p].AdjType[d ^ 1] = Empty;
             }
         }
     }
@@ -782,7 +821,55 @@ void ChunkManager::AddCube(std::PII cPos, unsigned int bn, BlockType bt){
     if (ChunkPosMap.find(cPos) != ChunkPosMap.end()){
         chunk[k = ChunkPosMap[cPos]].block[bn].bt = bt;
         chunk[k].onDraw.insert(bn);
+        
+        const int dx[] = {0, 0, -1, 1, 0, 0};
+        const int dz[] = {-1, 1, 0, 0, 0, 0};
+        const int dy[] = {0, 0, 0, 0, -1, 1};
+        const int xl = Chunk::xLength;
+        const int yl = Chunk::yLength;
+        const int zl = Chunk::zLength;
+        const int is = zl * yl;
+        const int js = yl;
+        int x = bn / is;
+        int z = bn / js & zl - 1;
+        int y = bn & yl - 1;
+        for (int d = 0; d < 6; d++)
+        if (y + dy[d] >= 0 && y + dy[d] < yl){
+            int p = 0;
+            Chunk *c = NULL;
+            if (x + dx[d] >= 0 && x + dx[d] < xl && z + dz[d] >= 0 && z + dz[d] < zl){
+                p = bn + dx[d] * is + dz[d] * js + dy[d], c = chunk + k;
+            }
+            else if (x + dx[d] < 0){
+                p = bn + is * (xl - 1), c = chunk[k].AdjChunk[2];
+            }
+            else if (x + dx[d] >= xl){
+                p = bn - is * (xl - 1), c = chunk[k].AdjChunk[3];
+            }
+            else if (z + dz[d] < 0){
+                p = bn + js * (zl - 1), c = chunk[k].AdjChunk[0];
+            }
+            else if (z + dz[d] >= zl){
+                p = bn - js * (zl - 1), c = chunk[k].AdjChunk[1];
+            }
+            if (c){
+                c->block[p].AdjType[d ^ 1] = bt;
+                chunk[k].block[bn].AdjType[d] = c->block[p].bt;
+            }
+        }
+        
     }
 }
+
+void ChunkManager::DrawShadowDepth(GLuint Program){
+    glBindVertexArray(containerVAO);
+    for (int i = 0; i < num; i++){
+        if (loaded[i]){
+            chunk[i].DrawShadowDepth(Program);
+        }
+    }
+    glBindVertexArray(0);
+}
+
 // End class ChunkManager
 #endif
