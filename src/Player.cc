@@ -46,7 +46,7 @@ void Player::Load(){
     shininess = x;
     MovementSpeed = y;
     in.close();
-    
+    Position.y = 120.0f;
     #ifdef boooom
         std::ofstream out;
         out.open("d2.txt");
