@@ -208,31 +208,31 @@ void Chunk::Display(){
     #endif
 }
 
-void Chunk::DrawShadowDepth(GLuint Program){
-    GLint modelLoc = glGetUniformLocation(Program, "model");
-    glm::vec3 WorldPos = glm::vec3(Position.x * xLength, 0.0f, Position.y * zLength);
-    glm::vec3 LocPos;
+// void Chunk::DrawShadowDepth(GLuint Program){
+    // GLint modelLoc = glGetUniformLocation(Program, "model");
+    // glm::vec3 WorldPos = glm::vec3(Position.x * xLength, 0.0f, Position.y * zLength);
+    // glm::vec3 LocPos;
     
     
-    for (std::set<int>::iterator it = onDraw.begin(); it != onDraw.end(); it++){
-        BlockType bt = block[*it].bt;
-        LocPos = glm::vec3(*it / (yLength * zLength),
-                            *it & yLength - 1,
-                            *it / yLength & zLength - 1);
+    // for (std::set<int>::iterator it = onDraw.begin(); it != onDraw.end(); it++){
+        // BlockType bt = block[*it].bt;
+        // LocPos = glm::vec3(*it / (yLength * zLength),
+                            // *it & yLength - 1,
+                            // *it / yLength & zLength - 1);
                             
-        glm::mat4 model = glm::translate(glm::mat4(), WorldPos + LocPos);
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        // glm::mat4 model = glm::translate(glm::mat4(), WorldPos + LocPos);
+        // glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
         
         
-        // Draw a cube
-        for (int i = 0; i < 6; i++){
-            if (block[*it].AdjType[i] == Empty){
-                glDrawArrays(GL_TRIANGLES, i * 6, 6);
-            }
-        }
-    }
+        // // Draw a cube
+        // for (int i = 0; i < 6; i++){
+            // if (block[*it].AdjType[i] == Empty){
+                // glDrawArrays(GL_TRIANGLES, i * 6, 6);
+            // }
+        // }
+    // }
     
-}
+// }
 
 void Chunk::Load(int x, int z){
     
@@ -610,7 +610,7 @@ void ChunkManager::Display(){
     glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z);
     
     Light::Apply(shader.Program);
-    Shadow::Apply(shader.Program);
+    //Shadow::Apply(shader.Program);
     
     // Create camera transformations
     glm::mat4 view = camera.GetViewMatrix();
@@ -622,7 +622,7 @@ void ChunkManager::Display(){
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
     
-    glUniformMatrix4fv(glGetUniformLocation(shader.Program, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(Light::getSunSpaceMatrix()));
+    //glUniformMatrix4fv(glGetUniformLocation(shader.Program, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(Light::getSunSpaceMatrix()));
     
         // Bind diffuse map
         /*glActiveTexture(GL_TEXTURE0);
@@ -861,15 +861,15 @@ void ChunkManager::AddCube(std::PII cPos, unsigned int bn, BlockType bt){
     }
 }
 
-void ChunkManager::DrawShadowDepth(GLuint Program){
-    glBindVertexArray(containerVAO);
-    for (int i = 0; i < num; i++){
-        if (loaded[i]){
-            chunk[i].DrawShadowDepth(Program);
-        }
-    }
-    glBindVertexArray(0);
-}
+// void ChunkManager::DrawShadowDepth(GLuint Program){
+    // glBindVertexArray(containerVAO);
+    // for (int i = 0; i < num; i++){
+        // if (loaded[i]){
+            // chunk[i].DrawShadowDepth(Program);
+        // }
+    // }
+    // glBindVertexArray(0);
+// }
 
 // End class ChunkManager
 #endif

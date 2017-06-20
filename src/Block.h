@@ -28,7 +28,7 @@ class Block{
 friend class Chunk;
 friend class ChunkManager;
 private:
-    BlockType bt;
+    BlockType bt, AdjType[6];
 public:
     Block(){
         bt = Empty;
